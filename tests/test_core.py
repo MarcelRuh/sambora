@@ -5,6 +5,7 @@ from app.smbconf_parser import (
     ensure_global_smb_include,
     filter_importable,
     infer_shares_base_path,
+    choose_shares_base_path,
     parse_smb_conf_shares,
 )
 from app.validators import ValidationError, validate_share_name, validate_samba_username
@@ -48,6 +49,12 @@ def test_infer_shares_base_path():
     assert infer_shares_base_path(["/srv/raid5/plex", "/srv/raid5/data"]) == "/srv/raid5"
     assert infer_shares_base_path(["/mnt/nas/files"]) == "/mnt/nas/files"
     assert infer_shares_base_path(["/srv/a", "/mnt/b"]) == "/"
+
+
+def test_choose_shares_base_path_rejects_root():
+    assert choose_shares_base_path(["/srv/raid5/a", "/srv/raid5/b"], "/srv/shares") == "/srv/raid5"
+    with pytest.raises(ValueError, match="nicht auf /"):
+        choose_shares_base_path(["/srv/a", "/mnt/b"], "/srv/shares")
 
 
 def test_ensure_global_smb_include_repairs_wrong_section():

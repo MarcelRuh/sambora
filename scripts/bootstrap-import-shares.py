@@ -99,10 +99,32 @@ def main() -> int:
         return 0
 
     import_names = {share.name for share in importable}
+    current_base = str(cfg.get("shares_base_path", "/srv/shares"))
     all_paths = [share.path for share in existing] + [share.path for share in importable]
-    current_base = cfg.get("shares_base_path", "/srv/shares")
     new_base = infer_shares_base_path(all_paths, default=current_base)
-    if new_base != current_base:
+    if new_base == "/":
+        kept = []
+        skipped = []
+        base_resolved = Path(current_base).resolve()
+        for share in importable:
+            try:
+                Path(share.path).resolve().relative_to(base_resolved)
+            except ValueError:
+                skipped.append(share.name)
+            else:
+                kept.append(share)
+        if skipped:
+            _log(
+                "Freigaben außerhalb von "
+                f"{current_base} übersprungen (Basis wäre sonst /): {', '.join(skipped)}"
+            )
+        importable = kept
+        import_names = {share.name for share in importable}
+        new_base = current_base
+        if not importable:
+            _log("Keine importierbaren Freigaben unter dem Basisverzeichnis.")
+            return 0
+    elif new_base != current_base:
         _save_config_shares_base(new_base)
 
     merged: list[Share] = list(existing)

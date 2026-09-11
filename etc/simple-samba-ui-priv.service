@@ -16,6 +16,16 @@ RestartSec=3
 KillMode=process
 RuntimeDirectory=simple-samba-ui
 RuntimeDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=false
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+SystemCallArchitectures=native
+MemoryDenyWriteExecute=false
 
 [Install]
 WantedBy=multi-user.target

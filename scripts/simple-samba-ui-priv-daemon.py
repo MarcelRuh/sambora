@@ -17,6 +17,7 @@ import re
 import secrets
 import shutil
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -124,7 +125,11 @@ def _ensure_app_import_path() -> None:
 
 def _shares_file_path() -> Path:
     cfg = load_app_config()
-    return Path(cfg.get("samba_shares_file") or "/etc/samba/smb-shares.conf")
+    return Path(cfg.get("samba_shares_file") or str(TARGET))
+
+
+def _shares_target() -> Path:
+    return _shares_file_path()
 
 
 def _parsed_to_share(parsed) -> "Share":
@@ -202,14 +207,16 @@ def _path_within_base(path_str: str, base: str) -> bool:
 
 
 def _update_config_shares_base(paths: list[str]) -> str:
-    from app.smbconf_parser import infer_shares_base_path
+    from app.smbconf_parser import choose_shares_base_path
 
     cfg = load_app_config()
     current = str(cfg.get("shares_base_path") or "/srv/shares")
-    new_base = infer_shares_base_path(paths, default=current)
+    new_base = choose_shares_base_path(paths, current)
     if cfg.get("shares_base_path") == new_base:
         return new_base
     cfg["shares_base_path"] = new_base
+    cfg["github_repo"] = DEFAULT_GITHUB_REPO
+    cfg["github_branch"] = DEFAULT_GITHUB_BRANCH
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     os.chmod(CONFIG_PATH, 0o600)
@@ -222,12 +229,35 @@ def _update_config_shares_base(paths: list[str]) -> str:
     return new_base
 
 
+def _restore_shares_base(old_base: str) -> None:
+    cfg = load_app_config()
+    if str(cfg.get("shares_base_path") or "") == old_base:
+        return
+    cfg["shares_base_path"] = old_base
+    cfg["github_repo"] = DEFAULT_GITHUB_REPO
+    cfg["github_branch"] = DEFAULT_GITHUB_BRANCH
+    CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.chmod(CONFIG_PATH, 0o600)
+
+
+def _restore_import_sources(
+    smb_conf_backup: Path | None,
+    source_backups: dict[Path, Path],
+) -> None:
+    if smb_conf_backup and smb_conf_backup.is_file():
+        shutil.copy2(smb_conf_backup, SMB_CONF)
+    for source_path, backup in source_backups.items():
+        if backup.is_file():
+            shutil.copy2(backup, source_path)
+
+
 def cmd_import_shares(body_text: str) -> tuple[bool, str]:
     _ensure_app_import_path()
     from app.smbconf_parser import (
         comment_out_shares_in_files,
         parse_all_smb_conf_shares_with_sources,
         repair_smb_conf_include,
+        choose_shares_base_path,
     )
     from app.samba import Share, read_shares, shares_to_config_content
 
@@ -255,7 +285,12 @@ def cmd_import_shares(body_text: str) -> tuple[bool, str]:
     shares_file = _shares_file_path()
     existing = read_shares(str(shares_file)) if shares_file.is_file() else []
     all_paths = [share.path for share in existing] + [share.path for share in selected]
-    _update_config_shares_base(all_paths)
+    old_base = str(load_app_config().get("shares_base_path") or "/srv/shares")
+    try:
+        new_base = choose_shares_base_path(all_paths, old_base)
+    except ValueError as exc:
+        return False, str(exc)
+    base_changed = new_base != old_base
 
     merged: list[Share] = list(existing)
     for parsed in selected:
@@ -267,6 +302,8 @@ def cmd_import_shares(body_text: str) -> tuple[bool, str]:
     smb_conf_backup = None
     source_backups: dict[Path, Path] = {}
     try:
+        if base_changed:
+            _update_config_shares_base(all_paths)
         if comment_out:
             if SMB_CONF.is_file():
                 smb_conf_backup = _backup_smb_conf()
@@ -278,13 +315,17 @@ def cmd_import_shares(body_text: str) -> tuple[bool, str]:
                 source_backups[source_path] = backup
                 source_path.write_text(updated, encoding="utf-8")
 
-        return cmd_write_shares(content)
+        ok, msg = cmd_write_shares(content)
+        if not ok:
+            _restore_import_sources(smb_conf_backup, source_backups)
+            if base_changed:
+                _restore_shares_base(old_base)
+            return False, msg
+        return True, msg
     except OSError as exc:
-        if smb_conf_backup and smb_conf_backup.is_file():
-            shutil.copy2(smb_conf_backup, SMB_CONF)
-        for source_path, backup in source_backups.items():
-            if backup.is_file():
-                shutil.copy2(backup, source_path)
+        _restore_import_sources(smb_conf_backup, source_backups)
+        if base_changed:
+            _restore_shares_base(old_base)
         return False, f"Import fehlgeschlagen: {exc}"
 
 
@@ -386,6 +427,32 @@ def ensure_ui_download_acl(path: Path) -> None:
         pass
 
 
+def _inherit_parent_ownership(path: Path) -> None:
+    try:
+        st = path.parent.stat()
+        os.chown(path, st.st_uid, st.st_gid)
+    except OSError:
+        pass
+
+
+def apply_share_directory_perms(path: Path, *, guest_ok: bool, valid_users: list[str]) -> None:
+    """Setzt Freigabe-Rechte. Gast: nobody 02770, nie weltbeschreibbar."""
+    if not guest_ok and len(valid_users) == 1:
+        pw = pwd.getpwnam(valid_users[0])
+        os.chown(path, pw.pw_uid, pw.pw_gid)
+        os.chmod(path, 0o2770)
+        return
+    if guest_ok:
+        try:
+            guest = pwd.getpwnam("nobody")
+            os.chown(path, guest.pw_uid, guest.pw_gid)
+        except KeyError:
+            pass
+        os.chmod(path, 0o2770)
+        return
+    os.chmod(path, 0o2770)
+
+
 def ensure_share_directories(content: str) -> tuple[bool, str]:
     """Erstellt Freigabe-Verzeichnisse; Rechte nur best-effort (ZFS-Mounts)."""
     errors: list[str] = []
@@ -406,14 +473,7 @@ def ensure_share_directories(content: str) -> tuple[bool, str]:
         valid_users = [u for u in re.split(r"[\s,]+", valid_raw) if u]
 
         try:
-            if not guest_ok and len(valid_users) == 1:
-                pw = pwd.getpwnam(valid_users[0])
-                os.chown(p, pw.pw_uid, pw.pw_gid)
-                os.chmod(p, 0o2770)
-            elif guest_ok:
-                os.chmod(p, 0o2777)
-            else:
-                os.chmod(p, 0o2770)
+            apply_share_directory_perms(p, guest_ok=guest_ok, valid_users=valid_users)
         except (OSError, KeyError) as exc:
             warnings.append(
                 f"{path_str}: Rechte nicht änderbar ({exc}) – bei ZFS-Mount ggf. am Host setzen."
@@ -594,6 +654,7 @@ def cmd_files_mkdir(path_str: str) -> tuple[bool, str]:
     try:
         target.mkdir(parents=False, exist_ok=False)
         os.chmod(target, 0o2770)
+        _inherit_parent_ownership(target)
     except FileExistsError:
         return False, "Ordner existiert bereits."
     except OSError as exc:
@@ -833,18 +894,20 @@ def cmd_files_commit_upload(body_text: str) -> tuple[bool, str]:
     try:
         shutil.move(str(staging), dest)
         os.chmod(dest, 0o0660)
+        _inherit_parent_ownership(dest)
     except OSError as exc:
         return False, f"Upload fehlgeschlagen: {exc}"
     return True, f"Datei hochgeladen: {dest.name}"
 
 
 def create_backup() -> Path | None:
-    if not TARGET.is_file():
+    target = _shares_target()
+    if not target.is_file():
         return None
     BACKUP_DIR.mkdir(parents=True, exist_ok=True, mode=0o750)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     backup = BACKUP_DIR / f"smb-shares.conf.{ts}.bak"
-    shutil.copy2(TARGET, backup)
+    shutil.copy2(target, backup)
     backups = sorted(BACKUP_DIR.glob("smb-shares.conf.*.bak"))
     while len(backups) > MAX_BACKUPS:
         backups.pop(0).unlink(missing_ok=True)
@@ -852,37 +915,43 @@ def create_backup() -> Path | None:
 
 
 def restore_backup(backup: Path | None) -> None:
+    target = _shares_target()
     if backup and backup.is_file():
-        shutil.copy2(backup, TARGET)
-    elif not TARGET.is_file():
-        TARGET.write_text(
+        shutil.copy2(backup, target)
+    elif not target.is_file():
+        target.write_text(
             "# Verwaltet von Sambora\n# Keine Freigaben definiert.\n",
             encoding="utf-8",
         )
 
 
 def atomic_write(content: str) -> None:
-    TARGET.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_name = tempfile.mkstemp(prefix=".smb-shares.", suffix=".tmp", dir=str(TARGET.parent))
+    target = _shares_target()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=".smb-shares.", suffix=".tmp", dir=str(target.parent))
     tmp_path = Path(tmp_name)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(content)
         os.chmod(tmp_path, 0o644)
-        os.replace(tmp_path, TARGET)
+        os.replace(tmp_path, target)
     except OSError:
         tmp_path.unlink(missing_ok=True)
         raise
 
 
 def apply_samba_after_config_change() -> tuple[bool, str]:
-    """Neue/geänderte Freigaben: smbd + nmbd neu starten (reload reicht oft nicht)."""
+    """Share-Config per Reload übernehmen; Restart nur als Fallback."""
     results: list[str] = []
     for unit in ("smbd", "nmbd"):
+        result = run_cmd([SYSTEMCTL, "reload", unit])
+        if result.returncode == 0:
+            results.append(f"{unit} neu geladen")
+            continue
         result = run_cmd([SYSTEMCTL, "restart", unit])
         detail = ((result.stderr or "") + (result.stdout or "")).strip()
         if result.returncode != 0:
-            return False, f"{unit} restart fehlgeschlagen.\n{detail}"
+            return False, f"{unit} reload/restart fehlgeschlagen.\n{detail}"
         results.append(f"{unit} neu gestartet")
     return True, ", ".join(results)
 
@@ -913,9 +982,10 @@ def cmd_write_shares(body: str) -> tuple[bool, str]:
 
     ok_apply, apply_msg = apply_samba_after_config_change()
     if not ok_apply:
-        return False, f"Konfiguration gespeichert, aber Dienst-Neustart fehlgeschlagen.\n{apply_msg}"
+        restore_backup(backup)
+        return False, f"Dienstübernahme fehlgeschlagen – Konfiguration zurückgesetzt.\n{apply_msg}"
 
-    return True, f"Freigaben gespeichert und Samba neu gestartet. {dir_msg}"
+    return True, f"Freigaben gespeichert und Samba übernommen. {dir_msg}"
 
 
 def cmd_backup_list() -> tuple[bool, str]:
@@ -956,7 +1026,7 @@ def cmd_backup_restore(name: str) -> tuple[bool, str]:
     if safe.startswith("smb-shares.conf."):
         pre = create_backup()
         try:
-            shutil.copy2(backup, TARGET)
+            shutil.copy2(backup, _shares_target())
         except OSError as exc:
             restore_backup(pre)
             return False, f"Wiederherstellung fehlgeschlagen: {exc}"
@@ -968,7 +1038,8 @@ def cmd_backup_restore(name: str) -> tuple[bool, str]:
             return False, f"Konfigurationsprüfung fehlgeschlagen – Rollback.\n{stdout}\n{stderr}".strip()
         ok_apply, apply_msg = apply_samba_after_config_change()
         if not ok_apply:
-            return False, f"Backup wiederhergestellt, aber Samba-Neustart fehlgeschlagen.\n{apply_msg}"
+            restore_backup(pre)
+            return False, f"Dienstübernahme fehlgeschlagen – Backup zurückgesetzt.\n{apply_msg}"
         return True, f"Freigabe-Konfiguration aus {safe} wiederhergestellt. {apply_msg}"
 
     if safe.startswith("smb.conf."):
@@ -1707,8 +1778,42 @@ def verify_runtime() -> None:
         sys.exit(1)
 
 
+def _peer_credentials(conn: socket.socket) -> tuple[int, int, int] | None:
+    """pid, uid, gid via SO_PEERCRED (Linux)."""
+    try:
+        raw = conn.getsockopt(
+            socket.SOL_SOCKET,
+            getattr(socket, "SO_PEERCRED", 17),
+            struct.calcsize("3i"),
+        )
+        pid, uid, gid = struct.unpack("3i", raw)
+        return pid, uid, gid
+    except (OSError, struct.error, AttributeError):
+        return None
+
+
+def peer_uid_allowed(uid: int) -> bool:
+    try:
+        return uid == pwd.getpwnam(ALLOWED_UID_NAME).pw_uid
+    except KeyError:
+        return False
+
+
+def _client_authorized(conn: socket.socket) -> bool:
+    creds = _peer_credentials(conn)
+    if creds is None:
+        return False
+    return peer_uid_allowed(creds[1])
+
+
 def _serve_client(conn: socket.socket) -> None:
     try:
+        if not _client_authorized(conn):
+            try:
+                conn.sendall(b"FAIL Nicht autorisiert\n")
+            except OSError:
+                pass
+            return
         handle_client(conn)
     finally:
         conn.close()

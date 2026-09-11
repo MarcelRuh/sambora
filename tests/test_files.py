@@ -1,6 +1,7 @@
 import pytest
 
 from app.files import FileBrowserError, resolve_browser_path
+from app.http import attachment_content_disposition
 from app.samba import Share
 from app.validators import ValidationError
 
@@ -61,3 +62,18 @@ def test_commit_upload_includes_filename(monkeypatch):
     commit_upload("data", "", "/var/lib/samba-ui/file-staging/upload-abc-test.pdf", "test.pdf")
     assert captured["command"] == "files-commit-upload"
     assert '"filename": "test.pdf"' in captured["body"]
+
+
+def test_attachment_content_disposition_utf8_and_quotes():
+    header = attachment_content_disposition('Fotos "Müller".zip')
+    assert header.startswith('attachment; filename="')
+    assert "filename*=UTF-8''" in header
+    assert "\n" not in header
+    fallback = header.split('filename="', 1)[1].split('"; filename*=', 1)[0]
+    assert '"' not in fallback
+    assert "Fotos" in fallback
+
+    nasty = attachment_content_disposition('a"b\nc.zip')
+    assert "\n" not in nasty
+    assert "\r" not in nasty
+

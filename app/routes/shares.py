@@ -57,9 +57,10 @@ def register(app: Flask) -> None:
                 write_shares(shares, config["samba_shares_file"], config["shares_base_path"])
                 audit_log("share.create", share.name)
                 host = resolve_access_host(config.get("bind_host", "0.0.0.0"))
+                access = "Gastzugriff ist aktiv." if share.guest_ok else "Samba-Benutzer erforderlich."
                 flash(
                     f"Freigabe „{share.name}“ erstellt. Sofort zugreifbar unter "
-                    f"\\\\{host}\\{share.name} (Samba-Benutzer erforderlich).",
+                    f"\\\\{host}\\{share.name} ({access})",
                     "success",
                 )
                 return redirect(url_for("shares_list"))
@@ -118,15 +119,24 @@ def register(app: Flask) -> None:
             share_path = share.path
             shares = [s for s in shares if not share_names_equal(s.name, share_name)]
             write_shares(shares, config["samba_shares_file"], config["shares_base_path"])
-            audit_log("share.delete", f"{share.name} files={'yes' if delete_files else 'no'}")
 
             if delete_files:
-                delete_share_directory(share_path, config["shares_base_path"])
-                flash(
-                    f"Freigabe „{share.name}“ und Verzeichnis „{share_path}“ wurden gelöscht.",
-                    "success",
-                )
+                try:
+                    delete_share_directory(share_path, config["shares_base_path"])
+                    audit_log("share.delete", f"{share.name} files=yes")
+                    flash(
+                        f"Freigabe „{share.name}“ und Verzeichnis „{share_path}“ wurden gelöscht.",
+                        "success",
+                    )
+                except SambaError as exc:
+                    audit_log("share.delete", f"{share.name} files=failed")
+                    flash(
+                        f"Freigabe „{share.name}“ wurde aus Samba entfernt, "
+                        f"Verzeichnis „{share_path}“ bleibt: {exc}",
+                        "error",
+                    )
             else:
+                audit_log("share.delete", f"{share.name} files=no")
                 flash(
                     f"Freigabe „{share.name}“ wurde gelöscht. Daten unter {share_path} bleiben erhalten.",
                     "success",

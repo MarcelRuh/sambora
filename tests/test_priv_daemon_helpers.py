@@ -139,3 +139,46 @@ def test_safe_clone_dir_rejects_escape(tmp_path):
     assert daemon._safe_clone_dir("relative") == daemon.DEFAULT_SOURCE_CLONE_DIR
     allowed = daemon._safe_clone_dir("/usr/local/src/sambora")
     assert allowed == Path("/usr/local/src/sambora")
+
+
+def test_peer_uid_allowed(monkeypatch):
+    daemon = _load_daemon_module()
+
+    class FakePw:
+        pw_uid = 1001
+
+    monkeypatch.setattr(daemon.pwd, "getpwnam", lambda name: FakePw())
+    assert daemon.peer_uid_allowed(1001)
+    assert not daemon.peer_uid_allowed(0)
+    assert not daemon.peer_uid_allowed(1002)
+
+
+def test_apply_share_directory_perms_guest_not_world_writable(tmp_path, monkeypatch):
+    daemon = _load_daemon_module()
+    path = tmp_path / "public"
+    path.mkdir()
+
+    class FakePw:
+        pw_uid = 65534
+        pw_gid = 65534
+
+    monkeypatch.setattr(daemon.pwd, "getpwnam", lambda name: FakePw())
+    chowns: list[tuple] = []
+    chmods: list[int] = []
+    monkeypatch.setattr(daemon.os, "chown", lambda p, uid, gid: chowns.append((uid, gid)))
+    monkeypatch.setattr(daemon.os, "chmod", lambda p, mode: chmods.append(mode))
+
+    daemon.apply_share_directory_perms(path, guest_ok=True, valid_users=[])
+    assert chmods == [0o2770]
+    assert 0o2777 not in chmods
+    assert chowns == [(65534, 65534)]
+
+
+def test_restore_import_sources(tmp_path):
+    daemon = _load_daemon_module()
+    src = tmp_path / "smb.conf"
+    src.write_text("changed\n", encoding="utf-8")
+    backup = tmp_path / "smb.conf.bak"
+    backup.write_text("original\n", encoding="utf-8")
+    daemon._restore_import_sources(None, {src: backup})
+    assert src.read_text(encoding="utf-8") == "original\n"

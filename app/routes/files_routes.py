@@ -21,6 +21,7 @@ from app.files import (
     list_directory,
     stage_download,
 )
+from app.http import attachment_content_disposition
 from app.samba import SambaError, read_shares
 from app.validators import ValidationError
 
@@ -115,7 +116,7 @@ def register(app: Flask) -> None:
                 iter_folder_zip(share_name, rel_path),
                 mimetype="application/zip",
                 headers={
-                    "Content-Disposition": f'attachment; filename="{folder_name}.zip"',
+                    "Content-Disposition": attachment_content_disposition(f"{folder_name}.zip"),
                     "X-Download-Total-Bytes": str(estimated_size),
                 },
             )

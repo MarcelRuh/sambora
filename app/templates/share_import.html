@@ -33,7 +33,9 @@
   </div>
   <p class="hint" style="margin-bottom:1rem">
     Basisverzeichnis: <code>{{ shares_base }}</code>.
-    Liegen Freigaben außerhalb (z.&nbsp;B. unter <code>/mnt</code>), wird die Basis beim Import automatisch angepasst.
+    Liegen alle ausgewählten Pfade unter einem gemeinsamen Ordner (nicht <code>/</code>),
+    wird die Basis beim Import angepasst. Freigaben auf verschiedenen Wurzeln
+    müssen getrennt importiert werden.
   </p>
 
   <form method="post" action="{{ url_for('share_import') }}">
@@ -64,7 +66,7 @@
               {% if share.within_base %}
                 <span class="badge ok">Bereit</span>
               {% else %}
-                <span class="badge warn">Basis wird angepasst</span>
+                <span class="badge warn">Andere Basis</span>
               {% endif %}
             </td>
           </tr>

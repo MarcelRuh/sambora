@@ -24,7 +24,7 @@ def validate_csrf_token() -> None:
         return
     expected = session.get(CSRF_SESSION_KEY)
     token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token", "")
-    if not expected or not token or token != expected:
+    if not expected or not token or not secrets.compare_digest(str(token), str(expected)):
         abort(403)
 
 

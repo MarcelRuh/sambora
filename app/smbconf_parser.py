@@ -260,6 +260,18 @@ def infer_shares_base_path(paths: list[str], default: str = "/srv/shares") -> st
     return common
 
 
+def choose_shares_base_path(paths: list[str], current: str) -> str:
+    """Gemeinsame Basis – lehnt / ab, damit File-Ops nicht systemweit gelten."""
+    inferred = infer_shares_base_path(paths, default=current)
+    if inferred == "/":
+        raise ValueError(
+            "Import abgelehnt: Die Freigaben liegen nicht unter einem gemeinsamen "
+            "Verzeichnis. Das Basisverzeichnis darf nicht auf / gesetzt werden. "
+            "Bitte nur Freigaben mit gemeinsamem Pfad auswählen."
+        )
+    return inferred
+
+
 def filter_importable(
     smbconf_shares: list[ParsedShare],
     existing_names: set[str],
