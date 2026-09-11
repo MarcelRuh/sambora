@@ -70,6 +70,8 @@ RUN_APP_UPDATE = Path("/opt/simple-samba-ui/scripts/run-app-update.py")
 DEFAULT_SOURCE_CLONE_DIR = Path("/usr/local/src/sambora")
 DEFAULT_GITHUB_REPO = "MarcelRuh/sambora"
 DEFAULT_GITHUB_BRANCH = "main"
+ALLOWED_GITHUB_REPOS = frozenset({DEFAULT_GITHUB_REPO})
+ALLOWED_GITHUB_BRANCHES = frozenset({DEFAULT_GITHUB_BRANCH})
 _apt_job_lock = threading.Lock()
 _app_update_job_lock = threading.Lock()
 STAGING_MAX_AGE_SECONDS = 3600
@@ -1332,12 +1334,21 @@ def cmd_apt_job_status() -> tuple[bool, str]:
     return True, json.dumps(data, ensure_ascii=False)
 
 
+def _safe_clone_dir(raw: str | None) -> Path:
+    path = Path(raw or DEFAULT_SOURCE_CLONE_DIR)
+    if not path.is_absolute() or ".." in path.parts:
+        return DEFAULT_SOURCE_CLONE_DIR
+    try:
+        path.relative_to("/usr/local/src")
+    except ValueError:
+        return DEFAULT_SOURCE_CLONE_DIR
+    return path
+
+
 def _github_settings() -> tuple[Path, str, str]:
     cfg = load_app_config()
-    clone_dir = Path(cfg.get("source_clone_dir") or DEFAULT_SOURCE_CLONE_DIR)
-    repo = str(cfg.get("github_repo") or DEFAULT_GITHUB_REPO).strip("/")
-    branch = str(cfg.get("github_branch") or DEFAULT_GITHUB_BRANCH).strip()
-    return clone_dir, repo, branch
+    clone_dir = _safe_clone_dir(str(cfg.get("source_clone_dir") or ""))
+    return clone_dir, DEFAULT_GITHUB_REPO, DEFAULT_GITHUB_BRANCH
 
 
 def _chown_app_update_job_files() -> None:

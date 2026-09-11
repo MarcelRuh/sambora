@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from dataclasses import dataclass
 
 from app.samba import SambaError, _priv_request
 
 APT_TIMEOUT_UPDATE = 660
+UPGRADABLE_CACHE_TTL = 300.0
+_upgradable_cache: tuple[float, list[str], str | None] | None = None
 
 
 class SystemUpdateError(Exception):
@@ -100,13 +103,26 @@ def format_uptime(seconds: int) -> str:
     return " ".join(parts)
 
 
+def invalidate_upgradable_cache() -> None:
+    global _upgradable_cache
+    _upgradable_cache = None
+
+
+def _store_upgradable_cache(packages: list[str], err: str | None) -> None:
+    global _upgradable_cache
+    _upgradable_cache = (time.monotonic(), packages, err)
+
+
 def apt_update() -> str:
+    invalidate_upgradable_cache()
     return _run_priv("apt-update", APT_TIMEOUT_UPDATE)
 
 
 def apt_list_upgradable() -> tuple[list[str], str]:
     output = _run_priv("apt-upgradable", APT_TIMEOUT_UPDATE)
-    return parse_upgradable_output(output), output
+    packages = parse_upgradable_output(output)
+    _store_upgradable_cache(packages, None)
+    return packages, output
 
 
 def apt_start_install_job() -> None:
@@ -157,12 +173,22 @@ def get_system_overview() -> SystemOverview:
     )
 
 
-def check_upgradable_safe() -> tuple[list[str], str | None]:
+def check_upgradable_safe(*, force: bool = False) -> tuple[list[str], str | None]:
+    now = time.monotonic()
+    if (
+        not force
+        and _upgradable_cache is not None
+        and now - _upgradable_cache[0] < UPGRADABLE_CACHE_TTL
+    ):
+        return _upgradable_cache[1], _upgradable_cache[2]
     try:
         packages, output = apt_list_upgradable()
+        _store_upgradable_cache(packages, None)
         return packages, output
     except (SystemUpdateError, SambaError) as exc:
-        return [], str(exc)
+        err = str(exc)
+        _store_upgradable_cache([], err)
+        return [], err
 
 
 def get_overview_safe() -> tuple[SystemOverview | None, str | None]:

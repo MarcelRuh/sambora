@@ -18,6 +18,12 @@ from app.auth import (
     is_authenticated,
 )
 from app.config import load_config, save_config
+from app.rate_limit import (
+    LoginRateLimited,
+    check_login_allowed,
+    clear_login_failures,
+    record_login_failure,
+)
 from app.validators import ValidationError, validate_password
 
 INITIAL_PASSWORD_FILE = "/etc/simple-samba-ui/initial-password.txt"
@@ -32,11 +38,20 @@ def register(app: Flask) -> None:
         if request.method == "POST":
             username = (request.form.get("username") or "").strip()
             password = request.form.get("password") or ""
+            client_ip = request.remote_addr or "unknown"
+            try:
+                check_login_allowed(client_ip)
+            except LoginRateLimited as exc:
+                minutes = max(1, (exc.retry_after + 59) // 60)
+                error = f"Zu viele Fehlversuche. Bitte in {minutes} Min. erneut versuchen."
+                return render_template("login.html", error=error)
             if attempt_login(username, password):
+                clear_login_failures(client_ip)
                 login_user(username)
                 audit_log("auth.login", "success", user=username)
                 next_url = safe_redirect_target(request.args.get("next"), url_for("index"))
                 return redirect(next_url)
+            record_login_failure(client_ip)
             audit_log("auth.login_failed", f"user={username}", user=username)
             error = "Ungültiger Benutzername oder Passwort."
         return render_template("login.html", error=error)

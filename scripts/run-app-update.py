@@ -6,6 +6,7 @@ from __future__ import annotations
 import grp
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -18,6 +19,10 @@ LOG_FILE = JOB_DIR / "output.log"
 DEFAULT_CLONE_DIR = Path("/usr/local/src/sambora")
 DEFAULT_REPO = "MarcelRuh/sambora"
 DEFAULT_BRANCH = "main"
+ALLOWED_REPOS = frozenset({DEFAULT_REPO})
+ALLOWED_BRANCHES = frozenset({DEFAULT_BRANCH})
+REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+BRANCH_RE = re.compile(r"^[A-Za-z0-9._/-]+$")
 GIT = "/usr/bin/git"
 BASH = "/bin/bash"
 SAMBA_UI_GROUP = "samba-ui"
@@ -93,10 +98,30 @@ def _read_local_version(clone_dir: Path) -> str | None:
     return None
 
 
+def _validate_update_source(repo: str, branch: str) -> tuple[str, str]:
+    repo = repo.strip("/")
+    branch = branch.strip()
+    if not REPO_RE.match(repo) or repo not in ALLOWED_REPOS:
+        raise ValueError(f"Unerlaubtes Update-Repository: {repo}")
+    if not BRANCH_RE.match(branch) or branch not in ALLOWED_BRANCHES:
+        raise ValueError(f"Unerlaubter Update-Branch: {branch}")
+    return repo, branch
+
+
 def main() -> int:
     clone_dir = Path(sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CLONE_DIR)
-    repo = (sys.argv[2] if len(sys.argv) > 2 else DEFAULT_REPO).strip("/")
-    branch = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_BRANCH
+    try:
+        repo, branch = _validate_update_source(
+            sys.argv[2] if len(sys.argv) > 2 else DEFAULT_REPO,
+            sys.argv[3] if len(sys.argv) > 3 else DEFAULT_BRANCH,
+        )
+    except ValueError as exc:
+        _log(f"Fehler: {exc}")
+        _write_status(
+            status="failed", phase="done", success=False,
+            started_at=_iso_now(), finished_at=_iso_now(),
+        )
+        return 1
     repo_url = f"https://github.com/{repo}.git"
 
     started = _iso_now()
@@ -122,6 +147,7 @@ def main() -> int:
         result = _run([GIT, "clone", "--depth", "1", "--branch", branch, repo_url, str(clone_dir)])
     else:
         _log(f"Aktualisiere vorhandenes Repository in {clone_dir} …")
+        _run([GIT, "-C", str(clone_dir), "remote", "set-url", "origin", repo_url])
         fetch = _run([GIT, "-C", str(clone_dir), "fetch", "--depth", "1", "origin", branch])
         _log(fetch.stdout)
         _log(fetch.stderr)

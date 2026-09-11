@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from app.auth import (
@@ -67,11 +69,35 @@ def test_login_success_redirects_to_status(client):
     assert res.headers["Location"].endswith("/status")
 
 
-def test_login_allows_repeated_failed_attempts(client):
-    for _ in range(10):
+def test_login_locks_out_after_repeated_failures(client):
+    for _ in range(5):
         res = _login_post(client, password="wrong")
         assert res.status_code == 200
         assert b"Ung\xc3\xbcltiger Benutzername oder Passwort" in res.data
+
+    res = _login_post(client, password="wrong")
+    assert res.status_code == 200
+    assert b"Zu viele Fehlversuche" in res.data
+    assert b"Ung\xc3\xbcltiger Benutzername oder Passwort" not in res.data
+
+
+def test_github_repo_pinned_on_load_and_save(app_config, monkeypatch):
+    config_path, data = app_config
+    monkeypatch.setattr("app.config.CONFIG_PATH", config_path)
+    data["github_repo"] = "evil/malware"
+    data["github_branch"] = "backdoor"
+    config_path.write_text(json.dumps(data), encoding="utf-8")
+
+    from app.config import load_config, save_config
+
+    loaded = load_config()
+    assert loaded["github_repo"] == "MarcelRuh/sambora"
+    assert loaded["github_branch"] == "main"
+
+    save_config(loaded)
+    stored = json.loads(config_path.read_text(encoding="utf-8"))
+    assert stored["github_repo"] == "MarcelRuh/sambora"
+    assert stored["github_branch"] == "main"
 
 
 def test_csrf_required_for_post(client):

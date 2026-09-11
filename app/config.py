@@ -38,11 +38,15 @@ DEFAULT_CONFIG: dict[str, Any] = {
 }
 
 
-LEGACY_GITHUB_REPOS = {"MarcelRuh/simple-samba", "MarcelRuh/simple-samba.git"}
-
-
 class ConfigError(Exception):
     """Fehler beim Laden oder Speichern der Konfiguration."""
+
+
+def pin_github_source(data: dict[str, Any]) -> dict[str, Any]:
+    """Update-Quelle ist fest – Config darf das Repo nicht umbiegen."""
+    data["github_repo"] = DEFAULT_CONFIG["github_repo"]
+    data["github_branch"] = DEFAULT_CONFIG["github_branch"]
+    return data
 
 
 def load_config() -> dict[str, Any]:
@@ -54,12 +58,7 @@ def load_config() -> dict[str, Any]:
     except (OSError, json.JSONDecodeError) as exc:
         raise ConfigError(f"Konfiguration unlesbar: {exc}") from exc
 
-    merged = {**DEFAULT_CONFIG, **data}
-    repo = str(merged.get("github_repo") or "").strip().rstrip("/")
-    if repo.endswith(".git"):
-        repo = repo[:-4]
-    if repo in LEGACY_GITHUB_REPOS:
-        merged["github_repo"] = DEFAULT_CONFIG["github_repo"]
+    merged = pin_github_source({**DEFAULT_CONFIG, **data})
     if not merged.get("session_secret"):
         raise ConfigError("session_secret fehlt in der Konfiguration")
     if not merged.get("admin_password_hash"):
@@ -68,6 +67,7 @@ def load_config() -> dict[str, Any]:
 
 
 def save_config(data: dict[str, Any]) -> None:
+    data = pin_github_source(dict(data))
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     tmp = CONFIG_PATH.with_suffix(".json.tmp")
     with tmp.open("w", encoding="utf-8") as fh:

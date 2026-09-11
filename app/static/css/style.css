@@ -196,25 +196,49 @@ code {
 }
 
 .sidebar-brand {
-  padding: 0;
+  padding: 1rem 0.85rem 0.9rem;
   display: block;
 }
 
 .sidebar-brand .logo {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
   width: 100%;
+  min-width: 0;
   color: var(--text);
 }
 
 .sidebar-brand .logo:hover { text-decoration: none; color: var(--text); }
 
-.sidebar-logo {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-  background: #05060c;
+.sidebar-brand .brand-mark {
+  width: 44px;
+  height: 44px;
+}
+
+.logo-text-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.05;
+}
+
+.logo-word {
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+}
+
+.logo-sub {
+  margin-top: 0.18rem;
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--proxora-blue);
+  text-shadow: 0 0 14px rgba(0, 180, 216, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logo-icon {

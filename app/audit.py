@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import Any
 
 AUDIT_LOG_PATH = Path("/var/log/simple-samba-ui/audit.log")
 MAX_READ_LINES = 500
+_LOG = logging.getLogger(__name__)
 
 ACTION_LABELS: dict[str, str] = {
     "auth.login": "Anmeldung",
@@ -66,8 +68,8 @@ def audit_log(action: str, detail: str = "", *, user: str | None = None) -> None
         with AUDIT_LOG_PATH.open("a", encoding="utf-8") as fh:
             fh.write(line)
         os.chmod(AUDIT_LOG_PATH, 0o640)
-    except OSError:
-        pass
+    except OSError as exc:
+        _LOG.warning("Audit-Log nicht schreibbar (%s): %s", AUDIT_LOG_PATH, exc)
 
 
 def read_audit_log(limit: int = MAX_READ_LINES) -> list[dict[str, Any]]:

@@ -51,11 +51,9 @@ def is_newer_version(latest: str, current: str) -> bool:
 
 
 def _settings(config: dict[str, Any]) -> tuple[str, str, bool, int]:
-    repo = str(config.get("github_repo") or DEFAULT_REPO).strip("/")
-    branch = str(config.get("github_branch") or DEFAULT_BRANCH).strip()
     enabled = bool(config.get("update_check_enabled", True))
     interval = int(config.get("update_check_interval_hours") or DEFAULT_INTERVAL_HOURS)
-    return repo, branch, enabled, max(1, interval)
+    return DEFAULT_REPO, DEFAULT_BRANCH, enabled, max(1, interval)
 
 
 def _raw_version_url(repo: str, branch: str) -> str:

@@ -236,10 +236,26 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'files-share-item' + (share.name === currentShare ? ' active' : '');
-      btn.innerHTML =
-        '<span class="files-share-icon" aria-hidden="true">' + fileIconSvg('dir') + '</span>' +
-        '<span class="files-share-label"><span class="files-share-name">' + share.name + '</span>' +
-        '<span class="files-share-path">' + share.path + '</span></span>';
+      var icon = document.createElement('span');
+      icon.className = 'files-share-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = fileIconSvg('dir');
+
+      var label = document.createElement('span');
+      label.className = 'files-share-label';
+
+      var nameEl = document.createElement('span');
+      nameEl.className = 'files-share-name';
+      nameEl.textContent = share.name;
+
+      var pathEl = document.createElement('span');
+      pathEl.className = 'files-share-path';
+      pathEl.textContent = share.path;
+
+      label.appendChild(nameEl);
+      label.appendChild(pathEl);
+      btn.appendChild(icon);
+      btn.appendChild(label);
       btn.addEventListener('click', function () {
         if (currentShare === share.name) return;
         currentShare = share.name;
@@ -456,9 +472,13 @@
       var nameBtn = document.createElement('button');
       nameBtn.type = 'button';
       nameBtn.className = 'files-list-name-btn';
-      nameBtn.innerHTML =
-        '<span class="files-list-icon">' + fileIconSvg(entry.type) + '</span>' +
-        '<span>' + entry.name + (entry.type === 'dir' ? '/' : '') + '</span>';
+      var icon = document.createElement('span');
+      icon.className = 'files-list-icon';
+      icon.innerHTML = fileIconSvg(entry.type);
+      var nameSpan = document.createElement('span');
+      nameSpan.textContent = entry.name + (entry.type === 'dir' ? '/' : '');
+      nameBtn.appendChild(icon);
+      nameBtn.appendChild(nameSpan);
       nameBtn.addEventListener('click', function () { openEntry(entry, data); });
       nameCell.appendChild(nameBtn);
 

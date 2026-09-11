@@ -113,3 +113,29 @@ def test_cleanup_stale_staging_removes_old_files(tmp_path, monkeypatch):
     assert removed_staging == 1
     assert not old_file.exists()
     assert removed_jobs == 0
+
+
+def test_github_settings_ignore_config_repo(monkeypatch):
+    daemon = _load_daemon_module()
+    monkeypatch.setattr(
+        daemon,
+        "load_app_config",
+        lambda: {
+            "github_repo": "evil/malware",
+            "github_branch": "backdoor",
+            "source_clone_dir": "/usr/local/src/sambora",
+        },
+    )
+    clone_dir, repo, branch = daemon._github_settings()
+    assert clone_dir == daemon.DEFAULT_SOURCE_CLONE_DIR
+    assert repo == "MarcelRuh/sambora"
+    assert branch == "main"
+
+
+def test_safe_clone_dir_rejects_escape(tmp_path):
+    daemon = _load_daemon_module()
+    assert daemon._safe_clone_dir("/tmp/evil") == daemon.DEFAULT_SOURCE_CLONE_DIR
+    assert daemon._safe_clone_dir("/usr/local/src/../tmp") == daemon.DEFAULT_SOURCE_CLONE_DIR
+    assert daemon._safe_clone_dir("relative") == daemon.DEFAULT_SOURCE_CLONE_DIR
+    allowed = daemon._safe_clone_dir("/usr/local/src/sambora")
+    assert allowed == Path("/usr/local/src/sambora")
