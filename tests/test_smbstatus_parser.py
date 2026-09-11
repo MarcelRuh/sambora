@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from app.smbstatus_parser import parse_smbstatus_json
+from app.smbstatus_parser import (
+    extract_json_object,
+    humanize_smbstatus_error,
+    parse_smbstatus_json,
+    unique_error_text,
+)
 
 
 def test_parse_smbstatus_json_empty():
@@ -66,3 +71,31 @@ def test_parse_smbstatus_json_sessions_only():
     assert summary.connections[0].user == "bob"
     assert summary.connections[0].machine == "NAS-CLIENT"
     assert summary.connections[0].share == "—"
+
+
+def test_extract_json_object_from_mixed_output():
+    mixed = (
+        "ERROR: Could not determine network interfaces, you must use a interfaces config line\n"
+        '{"sessions": {}, "tcons": {}, "open_files": {}}\n'
+    )
+    data = extract_json_object(mixed)
+    assert data == {"sessions": {}, "tcons": {}, "open_files": {}}
+    assert extract_json_object("kein json") is None
+
+
+def test_unique_error_text_dedupes_duplicate_lines():
+    msg = "ERROR: Could not determine network interfaces, you must use a interfaces config line"
+    assert unique_error_text(msg, msg) == msg
+    assert unique_error_text(msg + "\n" + msg, "") == msg
+
+
+def test_humanize_smbstatus_interfaces_error():
+    raw = (
+        "ERROR: Could not determine network interfaces, you must use a interfaces config line "
+        "ERROR: Could not determine network interfaces, you must use a interfaces config line"
+    )
+    text = humanize_smbstatus_error(raw)
+    assert "Netzwerkschnittstellen" in text
+    assert "interfaces =" in text
+    assert "ERROR:" not in text
+

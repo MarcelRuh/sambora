@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -20,6 +21,45 @@ class SmbStatusSummary:
     session_count: int
     open_files_count: int
     version: str
+
+
+def extract_json_object(text: str) -> dict[str, Any] | None:
+    """Erstes JSON-Objekt aus gemischter smbstatus-Ausgabe."""
+    if not text:
+        return None
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        data = json.loads(text[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def unique_error_text(*parts: str) -> str:
+    seen: set[str] = set()
+    lines: list[str] = []
+    for part in parts:
+        for line in (part or "").splitlines():
+            cleaned = line.strip()
+            if not cleaned or cleaned in seen:
+                continue
+            seen.add(cleaned)
+            lines.append(cleaned)
+    return "\n".join(lines)
+
+
+def humanize_smbstatus_error(err: str) -> str:
+    low = (err or "").lower()
+    if "could not determine network interfaces" in low or "interfaces config line" in low:
+        return (
+            "Samba findet keine Netzwerkschnittstellen. "
+            "In /etc/samba/smb.conf unter [global] z. B. "
+            "interfaces = 127.0.0.0/8 0.0.0.0/0 setzen und smbd neu laden."
+        )
+    return err.strip() or "smbstatus fehlgeschlagen."
 
 
 def _session_index(sessions: dict[str, Any]) -> dict[str, dict[str, Any]]:

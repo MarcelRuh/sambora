@@ -182,3 +182,32 @@ def test_restore_import_sources(tmp_path):
     backup.write_text("original\n", encoding="utf-8")
     daemon._restore_import_sources(None, {src: backup})
     assert src.read_text(encoding="utf-8") == "original\n"
+
+
+def test_cmd_smb_connections_retries_with_interfaces_override(monkeypatch, tmp_path):
+    import json
+    import subprocess
+
+    daemon = _load_daemon_module()
+    calls: list[list[str]] = []
+
+    def fake_run_cmd(cmd, input_data=None, timeout=120):
+        calls.append(list(cmd))
+        if "-s" in cmd:
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout='{"sessions": {}, "tcons": {}, "open_files": {}}\n', stderr=""
+            )
+        err = "ERROR: Could not determine network interfaces, you must use a interfaces config line\n"
+        return subprocess.CompletedProcess(cmd, 1, stdout=err, stderr=err)
+
+    monkeypatch.setattr(daemon, "run_cmd", fake_run_cmd)
+    smb_conf = tmp_path / "smb.conf"
+    smb_conf.write_text("[global]\nworkgroup = TEST\n", encoding="utf-8")
+    monkeypatch.setattr(daemon, "SMB_CONF", smb_conf)
+
+    ok, output = daemon.cmd_smb_connections()
+    assert ok
+    payload = json.loads(output)
+    assert payload["sessions"] == {}
+    assert any("-s" in cmd for cmd in calls)
+    assert any("--json" in cmd for cmd in calls)

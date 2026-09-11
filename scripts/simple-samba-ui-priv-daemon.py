@@ -1651,12 +1651,48 @@ def cmd_system_overview() -> tuple[bool, str]:
 
 
 def cmd_smb_connections() -> tuple[bool, str]:
-    result = run_cmd([SMBSTATUS, "--json"], timeout=30)
-    output = (result.stdout or "").strip()
-    if result.returncode == 0 and output:
-        return True, output
-    err = ((result.stderr or "") + "\n" + (result.stdout or "")).strip()
-    return False, err or "smbstatus fehlgeschlagen."
+    _ensure_app_import_path()
+    from app.smbstatus_parser import (
+        extract_json_object,
+        humanize_smbstatus_error,
+        unique_error_text,
+    )
+
+    def run(configfile: Path | None = None) -> tuple[dict | None, str]:
+        cmd = [SMBSTATUS, "--json"]
+        if configfile is not None:
+            cmd.extend(["-s", str(configfile)])
+        result = run_cmd(cmd, timeout=30)
+        mixed = f"{result.stdout or ''}\n{result.stderr or ''}"
+        data = extract_json_object(result.stdout or "") or extract_json_object(mixed)
+        if data is not None:
+            return data, ""
+        return None, unique_error_text(result.stderr or "", result.stdout or "")
+
+    data, err = run()
+    if data is not None:
+        return True, json.dumps(data, ensure_ascii=False)
+
+    wrapper: Path | None = None
+    try:
+        fd, name = tempfile.mkstemp(prefix="sambora-smbstatus.", suffix=".conf")
+        wrapper = Path(name)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            if SMB_CONF.is_file():
+                fh.write(f"include = {SMB_CONF}\n\n")
+            fh.write("[global]\n    interfaces = 127.0.0.0/8 0.0.0.0/0\n")
+        os.chmod(wrapper, 0o644)
+        data, err2 = run(wrapper)
+        if data is not None:
+            return True, json.dumps(data, ensure_ascii=False)
+        err = err2 or err
+    except OSError as exc:
+        err = err or str(exc)
+    finally:
+        if wrapper is not None:
+            wrapper.unlink(missing_ok=True)
+
+    return False, humanize_smbstatus_error(err)
 
 
 def cmd_apt_upgrade() -> tuple[bool, str]:

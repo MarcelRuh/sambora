@@ -205,4 +205,6 @@ def get_smb_status_safe() -> tuple["SmbStatusSummary | None", str | None]:
         raw = _run_priv_json("smb-connections", timeout=30)
         return parse_smbstatus_json(raw), None
     except (SystemUpdateError, SambaError) as exc:
-        return None, str(exc)
+        from app.smbstatus_parser import humanize_smbstatus_error
+
+        return None, humanize_smbstatus_error(str(exc))
