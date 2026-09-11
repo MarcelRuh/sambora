@@ -241,13 +241,13 @@ def start_app(config_path: Path):
 def capture(page) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     shots = [
-        ("/", "Dashboard.png", None),
-        ("/shares", "Freigaben.png", None),
-        ("/users", "Benutzer.png", None),
-        ("/dateien", "Dateien.png", ".files-grid-item, .files-empty, #files-grid"),
-        ("/status", "Status.png", None),
-        ("/system/updates", "Updates.png", None),
-        ("/change-password", "Passwort.png", None),
+        ("/", "dummy-dashboard.png", None),
+        ("/shares", "dummy-shares.png", None),
+        ("/users", "dummy-users.png", None),
+        ("/dateien", "dummy-files.png", ".files-grid-item, .files-empty, #files-grid"),
+        ("/status", "dummy-status.png", None),
+        ("/system/updates", "dummy-updates.png", None),
+        ("/change-password", "dummy-password.png", None),
     ]
     for path, name, wait_sel in shots:
         page.goto(f"{BASE}{path}", wait_until="networkidle")

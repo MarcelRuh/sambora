@@ -8,21 +8,21 @@ Samba Management Suite – interne Web-Verwaltung für Samba-Freigaben auf Debia
 
 Dummy-Daten (keine echten Hostnamen, Benutzer oder Pfade).
 
-| Dashboard | Freigaben |
-|-----------|----------|
-| ![Dashboard](docs/screenshots/Dashboard.png) | ![Freigaben](docs/screenshots/Freigaben.png) |
-
-| Benutzer | Datei-Explorer |
-|----------|----------------|
-| ![Benutzer](docs/screenshots/Benutzer.png) | ![Dateien](docs/screenshots/Dateien.png) |
-
-| Status | Updates |
-|--------|---------|
-| ![Status](docs/screenshots/Status.png) | ![Updates](docs/screenshots/Updates.png) |
-
-| Admin-Passwort |
-|----------------|
-| ![Admin-Passwort](docs/screenshots/Passwort.png) |
+<p align="center">
+  <img src="docs/screenshots/dummy-dashboard.png" alt="Dashboard" width="48%">
+  <img src="docs/screenshots/dummy-shares.png" alt="Freigaben" width="48%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/dummy-users.png" alt="Benutzer" width="48%">
+  <img src="docs/screenshots/dummy-files.png" alt="Datei-Explorer" width="48%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/dummy-status.png" alt="Status" width="48%">
+  <img src="docs/screenshots/dummy-updates.png" alt="Updates" width="48%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/dummy-password.png" alt="Admin-Passwort" width="48%">
+</p>
 
 ## Features
 
