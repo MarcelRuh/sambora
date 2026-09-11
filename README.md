@@ -2,7 +2,7 @@
 
 Interne Web-Verwaltung für Samba-Freigaben auf Debian – klein, ohne Reverse Proxy, ohne nginx/Caddy/Apache.
 
-**Aktuelle Version:** v1.18.0
+**Aktuelle Version:** v1.19.0
 
 ## Screenshots
 
@@ -20,6 +20,7 @@ Interne Web-Verwaltung für Samba-Freigaben auf Debian – klein, ohne Reverse P
 
 ## Features
 
+- **Proxora-Design** – Neon-UI analog zu [Proxora](https://github.com/MarcelRuh/proxora) (Orbitron, Pink/Purple, Sidebar)
 - SMB-Freigaben anlegen, bearbeiten, aktivieren/deaktivieren
 - Samba-Benutzer verwalten (`smbpasswd`)
 - Dienststatus & Konfigurationsprüfung (`testparm`)

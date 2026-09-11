@@ -4,8 +4,8 @@
 <div class="login-page">
   <div class="login-card">
     <div class="login-brand">
-      <div class="logo-icon">SMB</div>
-      <h1>{{ app_name }}</h1>
+      {% set mark_id = 'smb-mark-login' %}{% include '_brand_mark.html' %}
+      <h1 class="proxora-logo">SAMBA</h1>
       <p class="subtitle">Interne Samba-Verwaltung</p>
     </div>
     {% if error %}

@@ -3,6 +3,7 @@
 {% block page_heading %}{% if editing %}Freigabe bearbeiten{% else %}Neue Freigabe{% endif %}{% endblock %}
 {% block content %}
 <div class="page-header">
+  <p class="proxora-section">Shares</p>
   <h1>{% if editing %}Freigabe bearbeiten{% else %}Neue Freigabe{% endif %}</h1>
   <p class="lead">Pfad muss unter <code>{{ config.shares_base_path }}</code> liegen.</p>
 </div>

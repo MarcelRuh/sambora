@@ -3,18 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0f">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+<div class="ui-atmosphere" aria-hidden="true">
+  <div class="proxora-orb" style="top:-8%;left:-6%;width:420px;height:420px;background:radial-gradient(circle,color-mix(in srgb,var(--proxora-pink) 55%,transparent),transparent 70%)"></div>
+  <div class="proxora-orb" style="bottom:-12%;right:-8%;width:480px;height:480px;background:radial-gradient(circle,color-mix(in srgb,var(--proxora-blue) 40%,transparent),transparent 70%);animation-delay:-4s"></div>
+  <div class="proxora-orb" style="top:38%;right:18%;width:280px;height:280px;background:radial-gradient(circle,color-mix(in srgb,var(--proxora-purple) 35%,transparent),transparent 70%);animation-delay:-7s"></div>
+</div>
+
 {% if session.get('authenticated') %}
 <div class="app-shell">
-  <aside class="sidebar">
+  <button type="button" class="sidebar-backdrop" id="sidebar-backdrop" hidden aria-label="Menü schließen"></button>
+  <aside class="sidebar" id="app-sidebar">
     <div class="sidebar-brand">
       <a href="{{ url_for('index') }}" class="logo">
-        <span class="logo-icon">SMB</span>
-        <span class="logo-text">Simple <span class="logo-accent">Samba</span></span>
+        {% set mark_id = 'smb-mark-nav' %}{% include '_brand_mark.html' %}
+        <span class="logo-text-wrap">
+          <span class="logo-word proxora-logo">SAMBA</span>
+          <span class="logo-sub">Share Manager</span>
+        </span>
       </a>
     </div>
     <nav class="sidebar-nav">
@@ -51,24 +63,45 @@
       </a>
     </nav>
     <div class="sidebar-footer">
-      v{{ app_version }}
-      {% if app_update and app_update.update_available %}
-      <a href="{{ url_for('system_updates') }}" class="sidebar-update-link">v{{ app_update.latest_version }} verfügbar</a>
-      {% endif %}
-      · {{ session.get('username', 'admin') }}
-      <form method="post" action="{{ url_for('logout') }}" style="margin-top:0.5rem">
+      <a href="{{ url_for('system_updates') }}" class="sidebar-version">
+        <div class="sidebar-version-row">
+          <span>
+            {% if app_update and app_update.update_available %}
+              {{ app_version }} → {{ app_update.latest_version }}
+            {% else %}
+              v{{ app_version }}
+            {% endif %}
+          </span>
+          {% if app_update and app_update.update_available %}
+            <span class="sidebar-update-link" style="margin:0">Update</span>
+          {% else %}
+            <span>GitHub</span>
+          {% endif %}
+        </div>
+        <div class="dashboard-meter" aria-hidden="true" style="margin-top:0.5rem">
+          <div class="dashboard-meter-bar" style="width:{% if app_update and app_update.update_available %}12%{% else %}100%{% endif %}"></div>
+        </div>
+      </a>
+      <p class="sidebar-user">{{ session.get('username', 'admin') }} · admin</p>
+      <form method="post" action="{{ url_for('logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-ghost btn-sm" style="width:100%;justify-content:flex-start;padding-left:0">Abmelden</button>
+        <button type="submit" class="sidebar-logout">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Abmelden
+        </button>
       </form>
     </div>
   </aside>
   <div class="main-content">
     <header class="topbar">
       <div class="topbar-left">
+        <button type="button" class="menu-toggle" id="sidebar-toggle" aria-label="Menü öffnen" aria-controls="app-sidebar" aria-expanded="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
         <a href="{{ url_for('index') }}" class="topbar-logo" title="Simple Samba UI">
-          <span class="logo-icon">SMB</span>
+          {% set mark_id = 'smb-mark-top' %}{% include '_brand_mark.html' %}
         </a>
-        <div class="topbar-title">{% block page_heading %}{{ app_name }}{% endblock %}</div>
+        <div class="topbar-title proxora-logo">{% block page_heading %}SAMBA{% endblock %}</div>
       </div>
       <div class="topbar-meta">{{ public_url.rstrip('/') }}</div>
       <form method="post" action="{{ url_for('logout') }}" class="topbar-logout">

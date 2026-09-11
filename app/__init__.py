@@ -1,3 +1,3 @@
 """Simple Samba UI – interne Web-Verwaltung für Samba-Freigaben."""
 
-__version__ = "1.18.0"
+__version__ = "1.19.0"

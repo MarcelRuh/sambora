@@ -3,7 +3,8 @@
 {% block content %}
 <div class="login-page">
   <div class="card" style="max-width:420px;text-align:center">
-    <div style="font-size:3rem;font-weight:800;color:var(--accent);margin-bottom:0.5rem">{{ code }}</div>
+    <p class="proxora-section">Error</p>
+    <div class="proxora-title" style="font-size:3rem;margin:0.35rem 0 0.75rem">{{ code }}</div>
     <p style="margin-bottom:1.5rem;color:var(--text-secondary)">{{ message }}</p>
     <a href="{{ url_for('index') }}" class="btn btn-primary">Zur Startseite</a>
   </div>
