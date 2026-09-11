@@ -1,5 +1,5 @@
 #!/bin/bash
-# Simple Samba UI – Erstinstallation (als root)
+# Sambora – Erstinstallation (als root)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,7 +33,7 @@ fi
 
 echo ""
 echo "========================================"
-echo "  Simple Samba UI v${APP_VERSION}"
+echo "  Sambora v${APP_VERSION}"
 echo "  Installation für Debian 12/13"
 echo "========================================"
 echo ""

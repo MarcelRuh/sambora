@@ -1,8 +1,8 @@
-# Simple Samba UI
+# Sambora
 
-Interne Web-Verwaltung für Samba-Freigaben auf Debian – klein, ohne Reverse Proxy, ohne nginx/Caddy/Apache.
+Samba Management Suite – interne Web-Verwaltung für Samba-Freigaben auf Debian.
 
-**Aktuelle Version:** v1.19.1
+**Aktuelle Version:** v1.20.0
 
 ## Screenshots
 
@@ -69,18 +69,18 @@ Gunicorn (User: samba-ui) – Flask-App
 Als **root** (wget und sudo werden bei Bedarf automatisch installiert):
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/MarcelRuh/simple-samba/main/bootstrap.sh | bash
+wget -qO- https://raw.githubusercontent.com/MarcelRuh/sambora/main/bootstrap.sh | bash
 ```
 
 Als normaler Benutzer mit sudo:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/MarcelRuh/simple-samba/main/bootstrap.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/MarcelRuh/sambora/main/bootstrap.sh | sudo bash
 ```
 
 Ohne sudo: zuerst `su -`, dann einen der Befehle oben als root.
 
-Das Script klont das Repository nach `/usr/local/src/simple-samba`, installiert Abhängigkeiten, legt die App unter `/opt/simple-samba-ui` ab, erstellt Admin-Zugangsdaten und startet systemd-Dienste.
+Das Script klont das Repository nach `/usr/local/src/sambora`, installiert Abhängigkeiten, legt die App unter `/opt/simple-samba-ui` ab, erstellt Admin-Zugangsdaten und startet systemd-Dienste.
 
 **Bestehendes Samba:** Freigaben aus `smb.conf` werden automatisch importiert. Liegen Pfade z. B. unter `/srv/raid5` statt `/srv/shares`, wird das Basisverzeichnis entsprechend erkannt und gespeichert.
 
@@ -101,7 +101,7 @@ SIMPLE_SAMBA_BIND_HOST=192.168.178.252 \
 SIMPLE_SAMBA_BIND_PORT=8443 \
 SIMPLE_SAMBA_HTTP_PORT=8080 \
 SIMPLE_SAMBA_SHARES_BASE=/srv/shares \
-wget -qO- https://raw.githubusercontent.com/MarcelRuh/simple-samba/main/bootstrap.sh | bash
+wget -qO- https://raw.githubusercontent.com/MarcelRuh/sambora/main/bootstrap.sh | bash
 ```
 
 Ohne `SIMPLE_SAMBA_BIND_HOST` wird automatisch die **LAN-IP** verwendet.
@@ -109,8 +109,8 @@ Ohne `SIMPLE_SAMBA_BIND_HOST` wird automatisch die **LAN-IP** verwendet.
 ### Manuell (git clone)
 
 ```bash
-git clone https://github.com/MarcelRuh/simple-samba.git
-cd simple-samba
+git clone https://github.com/MarcelRuh/sambora.git
+cd sambora
 sudo bash install.sh
 ```
 
@@ -126,7 +126,7 @@ Konfiguration: `/etc/simple-samba-ui/config.json`
 
 ### Installation bei bestehendem Samba
 
-Simple Samba UI lässt sich **neben einer laufenden Samba-Installation** einrichten:
+Sambora lässt sich **neben einer laufenden Samba-Installation** einrichten:
 
 | Was passiert | Details |
 |--------------|---------|
@@ -147,14 +147,14 @@ Nach der Installation: **Freigaben → Aus smb.conf importieren** – übernimmt
 
 ### In der Web-UI (empfohlen)
 
-Unter **Updates → Simple Samba UI → Von GitHub aktualisieren**. Die App lädt den Quellcode und führt `update.sh` aus.
+Unter **Updates → Sambora → Von GitHub aktualisieren**. Die App lädt den Quellcode und führt `update.sh` aus.
 
 ### Manuell
 
 Nach Änderungen am Quellcode:
 
 ```bash
-cd /usr/local/src/simple-samba   # oder dein Clone-Verzeichnis
+cd /usr/local/src/sambora   # oder dein Clone-Verzeichnis
 git pull
 sudo bash update.sh
 ```
@@ -172,7 +172,7 @@ sudo bash uninstall.sh
 ## Projektstruktur
 
 ```
-simple-samba/
+sambora/
 ├── bootstrap.sh            # One-Liner-Einstieg (wget | bash)
 ├── install.sh / update.sh / uninstall.sh
 ├── app/                    # Flask-Anwendung

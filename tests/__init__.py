@@ -1,1 +1,1 @@
-"""Tests für Simple Samba UI."""
+"""Tests für Sambora."""

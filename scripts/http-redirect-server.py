@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HTTP → HTTPS Redirect (301) für Simple Samba UI."""
+"""HTTP → HTTPS Redirect (301) für Sambora."""
 
 from __future__ import annotations
 

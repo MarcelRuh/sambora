@@ -1,5 +1,5 @@
 [Unit]
-Description=Simple Samba UI – interne Web-Verwaltung
+Description=Sambora – interne Web-Verwaltung
 Documentation=file:/opt/simple-samba-ui/README.md
 After=network-online.target smbd.service simple-samba-ui-priv.service
 Wants=network-online.target simple-samba-ui-priv.service

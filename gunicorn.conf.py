@@ -45,7 +45,7 @@ proxy_allow_ips = "127.0.0.1"
 
 if not _cfg.get("tls_enabled"):
     print(
-        "TLS ist deaktiviert – Simple Samba UI erwartet HTTPS. "
+        "TLS ist deaktiviert – Sambora erwartet HTTPS. "
         "Bitte scripts/migrate-https-config.py ausführen.",
         file=sys.stderr,
     )

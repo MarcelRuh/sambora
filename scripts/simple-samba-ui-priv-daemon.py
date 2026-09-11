@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple Samba UI – privilegierter Hintergrund-Daemon (läuft als root).
+Sambora – privilegierter Hintergrund-Daemon (läuft als root).
 
 Kommunikation über Unix-Socket /run/simple-samba-ui/priv.sock
 (nur Gruppe samba-ui, kein sudo nötig).
@@ -67,8 +67,8 @@ APP_UPDATE_JOB_DIR = Path("/var/lib/samba-ui/app-update-job")
 APP_UPDATE_JOB_STATUS_FILE = APP_UPDATE_JOB_DIR / "status.json"
 APP_UPDATE_JOB_LOG_FILE = APP_UPDATE_JOB_DIR / "output.log"
 RUN_APP_UPDATE = Path("/opt/simple-samba-ui/scripts/run-app-update.py")
-DEFAULT_SOURCE_CLONE_DIR = Path("/usr/local/src/simple-samba")
-DEFAULT_GITHUB_REPO = "MarcelRuh/simple-samba"
+DEFAULT_SOURCE_CLONE_DIR = Path("/usr/local/src/sambora")
+DEFAULT_GITHUB_REPO = "MarcelRuh/sambora"
 DEFAULT_GITHUB_BRANCH = "main"
 _apt_job_lock = threading.Lock()
 _app_update_job_lock = threading.Lock()
@@ -854,7 +854,7 @@ def restore_backup(backup: Path | None) -> None:
         shutil.copy2(backup, TARGET)
     elif not TARGET.is_file():
         TARGET.write_text(
-            "# Verwaltet von Simple Samba UI\n# Keine Freigaben definiert.\n",
+            "# Verwaltet von Sambora\n# Keine Freigaben definiert.\n",
             encoding="utf-8",
         )
 

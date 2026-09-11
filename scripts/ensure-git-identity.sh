@@ -18,7 +18,7 @@ apply_identity() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 apply_identity "${SCRIPT_DIR}"
 
-for extra in /usr/local/src/simple-samba /home/github/simple-samba-ui; do
+for extra in /usr/local/src/sambora /home/github/sambora; do
 	[[ "${extra}" == "${SCRIPT_DIR}" ]] && continue
 	apply_identity "${extra}"
 done

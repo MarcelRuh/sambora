@@ -15,8 +15,8 @@ from pathlib import Path
 JOB_DIR = Path("/var/lib/samba-ui/app-update-job")
 STATUS_FILE = JOB_DIR / "status.json"
 LOG_FILE = JOB_DIR / "output.log"
-DEFAULT_CLONE_DIR = Path("/usr/local/src/simple-samba")
-DEFAULT_REPO = "MarcelRuh/simple-samba"
+DEFAULT_CLONE_DIR = Path("/usr/local/src/sambora")
+DEFAULT_REPO = "MarcelRuh/sambora"
 DEFAULT_BRANCH = "main"
 GIT = "/usr/bin/git"
 BASH = "/bin/bash"
@@ -103,7 +103,7 @@ def main() -> int:
     JOB_DIR.mkdir(parents=True, exist_ok=True)
     LOG_FILE.write_text("", encoding="utf-8")
     _write_status(status="running", phase="start", started_at=started)
-    _log(f"Simple Samba UI – Update von GitHub ({repo}@{branch})")
+    _log(f"Sambora – Update von GitHub ({repo}@{branch})")
     _log(f"Zielverzeichnis: {clone_dir}")
 
     if not Path(GIT).is_file():

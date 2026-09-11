@@ -25,7 +25,7 @@ def app_config(tmp_path):
         "admin_password_hash": password_hash,
         "session_secret": "a" * 64,
         "session_lifetime_hours": 8,
-        "github_repo": "MarcelRuh/simple-samba",
+        "github_repo": "MarcelRuh/sambora",
         "github_branch": "main",
         "update_check_enabled": False,
         "update_check_interval_hours": 6,

@@ -1,4 +1,4 @@
-"""Konfigurationsverwaltung für Simple Samba UI."""
+"""Konfigurationsverwaltung für Sambora."""
 
 from __future__ import annotations
 
@@ -24,11 +24,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "admin_password_hash": "",
     "session_secret": "",
     "session_lifetime_hours": 8,
-    "github_repo": "MarcelRuh/simple-samba",
+    "github_repo": "MarcelRuh/sambora",
     "github_branch": "main",
     "update_check_enabled": True,
     "update_check_interval_hours": 6,
-    "source_clone_dir": "/usr/local/src/simple-samba",
+    "source_clone_dir": "/usr/local/src/sambora",
     "max_upload_bytes": DEFAULT_MAX_UPLOAD_BYTES,
     "max_folder_download_files": DEFAULT_MAX_FOLDER_DOWNLOAD_FILES,
     "max_folder_download_bytes": DEFAULT_MAX_FOLDER_DOWNLOAD_BYTES,
@@ -36,6 +36,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "tls_cert_file": "/etc/simple-samba-ui/tls/server.crt",
     "tls_key_file": "/etc/simple-samba-ui/tls/server.key",
 }
+
+
+LEGACY_GITHUB_REPOS = {"MarcelRuh/simple-samba", "MarcelRuh/simple-samba.git"}
 
 
 class ConfigError(Exception):
@@ -52,6 +55,11 @@ def load_config() -> dict[str, Any]:
         raise ConfigError(f"Konfiguration unlesbar: {exc}") from exc
 
     merged = {**DEFAULT_CONFIG, **data}
+    repo = str(merged.get("github_repo") or "").strip().rstrip("/")
+    if repo.endswith(".git"):
+        repo = repo[:-4]
+    if repo in LEGACY_GITHUB_REPOS:
+        merged["github_repo"] = DEFAULT_CONFIG["github_repo"]
     if not merged.get("session_secret"):
         raise ConfigError("session_secret fehlt in der Konfiguration")
     if not merged.get("admin_password_hash"):

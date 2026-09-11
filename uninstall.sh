@@ -1,5 +1,5 @@
 #!/bin/bash
-# Simple Samba UI – Deinstallation (als root)
+# Sambora – Deinstallation (als root)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,7 +8,7 @@ source "${SCRIPT_DIR}/scripts/install-common.sh"
 
 require_root
 
-warn "Simple Samba UI wird deinstalliert."
+warn "Sambora wird deinstalliert."
 read -rp "Fortfahren? (ja/nein) [nein]: " confirm
 [[ "${confirm:-nein}" == "ja" ]] || exit 0
 

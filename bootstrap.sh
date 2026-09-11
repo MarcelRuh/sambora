@@ -1,17 +1,17 @@
 #!/bin/bash
-# Simple Samba UI – One-Liner-Installation
+# Sambora – One-Liner-Installation
 #
-#   wget -qO- https://raw.githubusercontent.com/MarcelRuh/simple-samba/main/bootstrap.sh | bash
+#   wget -qO- https://raw.githubusercontent.com/MarcelRuh/sambora/main/bootstrap.sh | bash
 #
 # Optional (nicht-interaktiv):
 #   SIMPLE_SAMBA_BIND_PORT=8080 \
-#     wget -qO- https://raw.githubusercontent.com/MarcelRuh/simple-samba/main/bootstrap.sh | bash
+#     wget -qO- https://raw.githubusercontent.com/MarcelRuh/sambora/main/bootstrap.sh | bash
 set -euo pipefail
 
-REPO_URL="${SIMPLE_SAMBA_REPO:-https://github.com/MarcelRuh/simple-samba.git}"
-CLONE_DIR="${SIMPLE_SAMBA_CLONE_DIR:-/usr/local/src/simple-samba}"
+REPO_URL="${SIMPLE_SAMBA_REPO:-https://github.com/MarcelRuh/sambora.git}"
+CLONE_DIR="${SIMPLE_SAMBA_CLONE_DIR:-/usr/local/src/sambora}"
 BRANCH="${SIMPLE_SAMBA_BRANCH:-main}"
-RAW_BOOTSTRAP="https://raw.githubusercontent.com/MarcelRuh/simple-samba/main/bootstrap.sh"
+RAW_BOOTSTRAP="https://raw.githubusercontent.com/MarcelRuh/sambora/main/bootstrap.sh"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -36,7 +36,7 @@ if [[ "${EUID}" -ne 0 ]]; then
             bash -s "$@" <<'BOOTSTRAP_INLINE'
 set -euo pipefail
 if command -v wget >/dev/null 2>&1; then
-  exec bash < <(wget -qO- 'https://raw.githubusercontent.com/MarcelRuh/simple-samba/main/bootstrap.sh')
+  exec bash < <(wget -qO- 'https://raw.githubusercontent.com/MarcelRuh/sambora/main/bootstrap.sh')
 else
   echo "wget erforderlich." >&2
   exit 1
@@ -73,7 +73,7 @@ ensure_bootstrap_tools() {
 
 echo ""
 echo "========================================"
-echo "  Simple Samba UI – Bootstrap"
+echo "  Sambora – Bootstrap"
 echo "========================================"
 echo ""
 

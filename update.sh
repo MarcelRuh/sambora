@@ -1,5 +1,5 @@
 #!/bin/bash
-# Simple Samba UI – Update auf aktuelle Version (als root)
+# Sambora – Update auf aktuelle Version (als root)
 # Kopiert aus dem Quellverzeichnis nach /opt/simple-samba-ui
 set -euo pipefail
 
@@ -11,7 +11,7 @@ require_root
 
 echo ""
 echo "========================================"
-echo "  Simple Samba UI Update → v${APP_VERSION}"
+echo "  Sambora Update → v${APP_VERSION}"
 echo "========================================"
 echo ""
 

@@ -1,4 +1,4 @@
-"""Prüft GitHub auf neuere Simple-Samba-UI-Versionen."""
+"""Prüft GitHub auf neuere Sambora-Versionen."""
 
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ from typing import Any
 CACHE_PATH = Path("/etc/simple-samba-ui/app-update-check.json")
 LEGACY_CACHE_PATH = Path("/var/lib/samba-ui/app-update-check.json")
 VERSION_RE = re.compile(r"""__version__\s*=\s*['"]([^'"]+)['"]""")
-DEFAULT_REPO = "MarcelRuh/simple-samba"
+DEFAULT_REPO = "MarcelRuh/sambora"
 DEFAULT_BRANCH = "main"
 DEFAULT_INTERVAL_HOURS = 6
 REQUEST_TIMEOUT = 12
-USER_AGENT = "Simple-Samba-UI-UpdateCheck/1.0"
+USER_AGENT = "Sambora-UpdateCheck/1.0"
 
 
 @dataclass
@@ -150,7 +150,7 @@ def get_app_update_info(
     bootstrap_command = (
         f"wget -qO- https://raw.githubusercontent.com/{repo}/{branch}/bootstrap.sh | bash"
     )
-    manual_command = "cd /usr/local/src/simple-samba && git pull && sudo bash update.sh"
+    manual_command = "cd /usr/local/src/sambora && git pull && sudo bash update.sh"
 
     if not enabled:
         return AppUpdateInfo(

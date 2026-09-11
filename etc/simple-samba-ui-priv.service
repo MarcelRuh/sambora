@@ -1,5 +1,5 @@
 [Unit]
-Description=Simple Samba UI – Privilege Daemon (root)
+Description=Sambora – Privilege Daemon (root)
 Documentation=file:/opt/simple-samba-ui/README.md
 Wants=smbd.service
 After=network.target smbd.service

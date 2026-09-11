@@ -161,10 +161,10 @@ def read_shares(shares_file: str) -> list[Share]:
 def shares_to_config_content(shares: list[Share]) -> str:
     if not shares:
         return (
-            "# Verwaltet von Simple Samba UI\n"
+            "# Verwaltet von Sambora\n"
             "# Keine Freigaben definiert.\n"
         )
-    blocks = ["# Verwaltet von Simple Samba UI – nicht manuell bearbeiten\n"]
+    blocks = ["# Verwaltet von Sambora – nicht manuell bearbeiten\n"]
     for share in shares:
         blocks.append(share.to_ini_section())
         blocks.append("")

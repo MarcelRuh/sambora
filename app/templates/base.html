@@ -25,12 +25,8 @@
   <button type="button" class="sidebar-backdrop" id="sidebar-backdrop" hidden aria-label="Menü schließen"></button>
   <aside class="sidebar" id="app-sidebar">
     <div class="sidebar-brand">
-      <a href="{{ url_for('index') }}" class="logo">
+      <a href="{{ url_for('index') }}" class="logo" title="Sambora">
         {% include '_brand_mark.html' %}
-        <span class="logo-text-wrap">
-          <span class="logo-word proxora-logo">SAMBORA</span>
-          <span class="logo-sub">Samba Management</span>
-        </span>
       </a>
     </div>
     <nav class="sidebar-nav">

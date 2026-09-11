@@ -1,5 +1,5 @@
 #!/bin/bash
-# Gemeinsame Install-/Update-Logik für Simple Samba UI
+# Gemeinsame Install-/Update-Logik für Sambora
 # Quellverzeichnis (Clone) → Deployment nach /opt/simple-samba-ui
 
 _INSTALL_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -139,7 +139,7 @@ ensure_samba_shares_file() {
     if [[ ! -f "${SAMBA_SHARES_FILE}" ]]; then
         info "Erstelle ${SAMBA_SHARES_FILE} …"
         cat >"${SAMBA_SHARES_FILE}" <<'EOF'
-# Verwaltet von Simple Samba UI
+# Verwaltet von Sambora
 # Keine Freigaben definiert.
 EOF
         chmod 644 "${SAMBA_SHARES_FILE}"
@@ -228,7 +228,7 @@ ensure_tls_certificates() {
         info "Erzeuge selbstsigniertes TLS-Zertifikat …"
         openssl req -x509 -newkey rsa:2048 -nodes \
             -keyout "${key}" -out "${cert}" -days 3650 \
-            -subj "/CN=simple-samba-ui/O=Simple Samba UI" 2>/dev/null
+            -subj "/CN=simple-samba-ui/O=Sambora" 2>/dev/null
     fi
     chown -R samba-ui:samba-ui "${tls_dir}" 2>/dev/null || true
     chmod 750 "${tls_dir}"

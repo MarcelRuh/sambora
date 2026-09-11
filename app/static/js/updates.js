@@ -250,7 +250,7 @@
           buttonId: 'btn-app-update',
           buttonIdleText: appUpdateLabel,
           confirmTitle: 'App von GitHub aktualisieren',
-          confirmText: 'Simple Samba UI von GitHub aktualisieren? Die Web-UI startet kurz neu.',
+          confirmText: 'Sambora von GitHub aktualisieren? Die Web-UI startet kurz neu.',
           danger: false,
           onSuccess: function (data) {
             var msg = 'App-Update abgeschlossen.';

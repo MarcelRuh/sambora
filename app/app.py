@@ -1,4 +1,4 @@
-"""Flask-Anwendung – Simple Samba UI."""
+"""Flask-Anwendung – Sambora."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def create_app() -> Flask:
             except Exception:
                 app_update = None
         return {
-            "app_name": "Simple Samba UI",
+            "app_name": "Sambora",
             "app_version": __version__,
             "config": cfg,
             "access_host": access_host,

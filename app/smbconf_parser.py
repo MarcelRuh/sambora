@@ -16,7 +16,7 @@ SKIP_SECTIONS = frozenset({
 })
 
 SMB_SHARES_INCLUDE = "/etc/samba/smb-shares.conf"
-UI_INCLUDE_MARKER = "# Simple Samba UI – verwaltete Freigaben"
+UI_INCLUDE_MARKER = "# Sambora – verwaltete Freigaben"
 _INCLUDE_RE = re.compile(r"^\s*include\s*=\s*(.+)$", re.IGNORECASE)
 _SECTION_RE = re.compile(r"^\s*\[(.+?)\]\s*$")
 
@@ -293,7 +293,7 @@ def comment_out_sections(content: str, section_names: set[str]) -> str:
             section = stripped[1:-1].strip().lower()
             in_target = section in targets
             if in_target:
-                output.append(f"# Simple Samba UI – importiert nach smb-shares.conf")
+                output.append(f"# Sambora – importiert nach smb-shares.conf")
         if in_target:
             if not line.lstrip().startswith("#"):
                 output.append(f"# {line}")

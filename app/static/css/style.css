@@ -1,4 +1,4 @@
-/* Simple Samba UI – Proxora-Design (Neon/Standard) */
+/* Sambora – Proxora-Design (Neon/Standard) */
 
 :root {
   color-scheme: dark;
@@ -196,36 +196,22 @@ code {
 }
 
 .sidebar-brand {
-  padding: 1.25rem 1rem 1rem;
+  padding: 1.1rem 0.85rem 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
 }
 
 .sidebar-brand .logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
   color: var(--text);
 }
 
 .sidebar-brand .logo:hover { text-decoration: none; color: var(--text); }
 
-.logo-text-wrap { min-width: 0; }
-
-.logo-word {
-  font-size: 1.15rem;
-  line-height: 1;
-}
-
-.logo-sub {
-  margin-top: 0.3rem;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: #a0a0b0;
+.sidebar-brand .brand-mark {
+  width: 48px;
+  height: 48px;
 }
 
 .logo-icon {
