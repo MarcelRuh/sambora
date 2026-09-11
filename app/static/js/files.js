@@ -41,12 +41,16 @@
 
   var IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|ico)$/i;
 
+  function ui() {
+    return window.Sambora || window.SambaUI;
+  }
+
   function csrfToken() {
-    return window.SambaUI ? window.SambaUI.csrfToken() : '';
+    return ui() ? ui().csrfToken() : '';
   }
 
   function formatSize(bytes) {
-    return window.SambaUI ? window.SambaUI.formatSize(bytes) : String(bytes);
+    return ui() ? ui().formatSize(bytes) : String(bytes);
   }
 
   function shareByName(name) {
@@ -352,7 +356,7 @@
 
   function confirmDelete(entryName, entryType, rel) {
     var label = entryType === 'dir' ? 'Ordner' : 'Datei';
-    window.SambaUI.confirm(
+    ui().confirm(
       '"' + entryName + '" wirklich löschen?',
       { title: label + ' löschen', okLabel: 'Löschen', danger: true }
     ).then(function (ok) {
@@ -811,7 +815,7 @@
 
   mkdirBtn.addEventListener('click', function () {
     if (readOnly) return;
-    window.SambaUI.prompt({
+    ui().prompt({
       title: 'Neuer Ordner',
       label: 'Ordnername',
       okLabel: 'Erstellen',

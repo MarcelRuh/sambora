@@ -11,7 +11,7 @@ def _csrf_headers(client) -> dict[str, str]:
     client.get("/")
     with client.session_transaction() as sess:
         token = sess[CSRF_SESSION_KEY]
-    return {"X-CSRF-Token": token, "Content-Type": "application/json"}
+    return {"X-CSRF-Token": token}
 
 
 def test_system_reboot_requires_login(client):
@@ -25,12 +25,26 @@ def test_system_reboot_requires_csrf(client):
     assert res.status_code == 403
 
 
+def test_system_reboot_requires_password(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routes.system.system_reboot",
+        lambda: "Neustart wurde geplant.",
+    )
+    res = client.post("/system/updates/reboot", headers=_csrf_headers(client), json={})
+    assert res.status_code == 403
+    assert res.get_json()["ok"] is False
+
+
 def test_system_reboot_success(client, monkeypatch):
     monkeypatch.setattr(
         "app.routes.system.system_reboot",
         lambda: "Neustart wurde geplant.",
     )
-    res = client.post("/system/updates/reboot", headers=_csrf_headers(client))
+    res = client.post(
+        "/system/updates/reboot",
+        headers=_csrf_headers(client),
+        json={"password": "testpass123"},
+    )
     assert res.status_code == 200
     data = res.get_json()
     assert data["ok"] is True
@@ -44,7 +58,11 @@ def test_system_reboot_priv_error(client, monkeypatch):
         raise SystemUpdateError("Kein Neustart erforderlich.")
 
     monkeypatch.setattr("app.routes.system.system_reboot", _fail)
-    res = client.post("/system/updates/reboot", headers=_csrf_headers(client))
+    res = client.post(
+        "/system/updates/reboot",
+        headers=_csrf_headers(client),
+        json={"password": "testpass123"},
+    )
     assert res.status_code == 400
     assert res.get_json()["ok"] is False
 

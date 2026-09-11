@@ -11,6 +11,8 @@ from typing import Any
 
 AUDIT_LOG_PATH = Path("/var/log/simple-samba-ui/audit.log")
 MAX_READ_LINES = 500
+MAX_LOG_BYTES = 5 * 1024 * 1024
+_READ_CHUNK = 8192
 _LOG = logging.getLogger(__name__)
 
 ACTION_LABELS: dict[str, str] = {
@@ -55,6 +57,21 @@ def _actor(user: str | None) -> str:
     return "system"
 
 
+def _rotate_if_needed() -> None:
+    try:
+        if not AUDIT_LOG_PATH.is_file():
+            return
+        if AUDIT_LOG_PATH.stat().st_size < MAX_LOG_BYTES:
+            return
+        rotated = AUDIT_LOG_PATH.with_name(AUDIT_LOG_PATH.name + ".1")
+        if rotated.exists():
+            rotated.unlink()
+        AUDIT_LOG_PATH.replace(rotated)
+        os.chmod(rotated, 0o640)
+    except OSError as exc:
+        _LOG.warning("Audit-Log Rotation fehlgeschlagen: %s", exc)
+
+
 def audit_log(action: str, detail: str = "", *, user: str | None = None) -> None:
     entry = {
         "ts": datetime.now(timezone.utc).isoformat(),
@@ -64,6 +81,7 @@ def audit_log(action: str, detail: str = "", *, user: str | None = None) -> None
     }
     try:
         AUDIT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _rotate_if_needed()
         line = json.dumps(entry, ensure_ascii=False) + "\n"
         with AUDIT_LOG_PATH.open("a", encoding="utf-8") as fh:
             fh.write(line)
@@ -72,15 +90,30 @@ def audit_log(action: str, detail: str = "", *, user: str | None = None) -> None
         _LOG.warning("Audit-Log nicht schreibbar (%s): %s", AUDIT_LOG_PATH, exc)
 
 
+def _tail_lines(path: Path, limit: int) -> list[str]:
+    if limit <= 0:
+        return []
+    try:
+        with path.open("rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            pos = fh.tell()
+            buffer = b""
+            while pos > 0 and buffer.count(b"\n") <= limit:
+                read_size = min(_READ_CHUNK, pos)
+                pos -= read_size
+                fh.seek(pos)
+                buffer = fh.read(read_size) + buffer
+    except OSError:
+        return []
+    text = buffer.decode("utf-8", errors="replace")
+    return text.splitlines()[-limit:]
+
+
 def read_audit_log(limit: int = MAX_READ_LINES) -> list[dict[str, Any]]:
     if not AUDIT_LOG_PATH.is_file():
         return []
-    try:
-        lines = AUDIT_LOG_PATH.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
     entries: list[dict[str, Any]] = []
-    for line in lines[-limit:]:
+    for line in _tail_lines(AUDIT_LOG_PATH, max(1, int(limit))):
         line = line.strip()
         if not line:
             continue

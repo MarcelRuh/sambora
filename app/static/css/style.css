@@ -1,4 +1,4 @@
-/* Sambora – Proxora-Design (Neon/Standard) */
+/* Sambora – Neon-Design (Orbitron, Pink/Purple) */
 
 :root {
   color-scheme: dark;
@@ -35,16 +35,16 @@
   --sidebar-w: 16rem;
   --header-h: 56px;
   --transition: 0.2s ease;
-  --proxora-blue: #00b4d8;
-  --proxora-purple: #8338ec;
-  --proxora-pink: #ff006e;
-  --ui-fill: linear-gradient(90deg, var(--proxora-pink), var(--proxora-purple));
-  --ui-logo-fill: linear-gradient(135deg, var(--proxora-pink), var(--proxora-purple), var(--proxora-blue));
+  --brand-cyan: #00b4d8;
+  --brand-purple: #8338ec;
+  --brand-pink: #ff006e;
+  --ui-fill: linear-gradient(90deg, var(--brand-pink), var(--brand-purple));
+  --ui-logo-fill: linear-gradient(135deg, var(--brand-pink), var(--brand-purple), var(--brand-cyan));
   --ui-title-fill: linear-gradient(135deg, #fff, #aaa);
   --ui-btn-glow: 0 0 18px rgba(255, 0, 110, 0.35);
   --ui-fill-glow: 0 0 12px rgba(255, 0, 110, 0.45);
   --ui-nav-active-bg: rgba(255, 0, 110, 0.1);
-  --ui-nav-active-shadow: inset 3px 0 0 var(--proxora-pink), 0 0 18px rgba(255, 0, 110, 0.15);
+  --ui-nav-active-shadow: inset 3px 0 0 var(--brand-pink), 0 0 18px rgba(255, 0, 110, 0.15);
   --ui-kicker-tracking: 0.28em;
   --ui-chrome-border: rgba(131, 56, 236, 0.2);
   --ui-panel-hover-border: rgba(131, 56, 236, 0.35);
@@ -74,7 +74,7 @@ body {
 }
 
 ::selection {
-  background: var(--proxora-pink);
+  background: var(--brand-pink);
   color: #fff;
 }
 
@@ -106,23 +106,23 @@ code {
   overflow: hidden;
 }
 
-@keyframes proxora-orb-float {
+@keyframes ui-orb-float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   25% { transform: translate(30px, -40px) scale(1.1); }
   50% { transform: translate(-20px, 20px) scale(0.95); }
   75% { transform: translate(40px, 30px) scale(1.05); }
 }
 
-.proxora-orb {
+.ui-orb {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
   opacity: 0.28;
   pointer-events: none;
-  animation: proxora-orb-float 10s ease-in-out infinite;
+  animation: ui-orb-float 10s ease-in-out infinite;
 }
 
-.proxora-logo {
+.brand-word {
   font-family: var(--font-display), sans-serif;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -133,7 +133,7 @@ code {
   filter: var(--ui-logo-glow);
 }
 
-.proxora-title {
+.brand-title {
   font-family: var(--font-display), sans-serif;
   font-weight: 900;
   background: var(--ui-title-fill);
@@ -142,22 +142,22 @@ code {
   -webkit-text-fill-color: transparent;
 }
 
-.proxora-stat {
+.brand-stat {
   font-family: var(--font-display), sans-serif;
   font-weight: 900;
-  background: linear-gradient(135deg, var(--proxora-pink), var(--proxora-purple));
+  background: linear-gradient(135deg, var(--brand-pink), var(--brand-purple));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: var(--ui-stat-glow);
 }
 
-.proxora-section {
+.ui-kicker {
   font-family: var(--font-display), sans-serif;
   font-size: 0.7rem;
   letter-spacing: var(--ui-kicker-tracking);
   text-transform: uppercase;
-  color: var(--proxora-blue);
+  color: var(--brand-cyan);
   text-shadow: 0 0 18px rgba(0, 180, 216, 0.45);
 }
 
@@ -449,7 +449,7 @@ code {
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--proxora-pink), var(--proxora-purple), transparent);
+  background: linear-gradient(90deg, transparent, var(--brand-pink), var(--brand-purple), transparent);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
@@ -475,7 +475,7 @@ code {
   font-family: var(--font-display);
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--proxora-blue);
+  color: var(--brand-cyan);
   text-transform: uppercase;
   letter-spacing: var(--ui-kicker-tracking);
   text-shadow: 0 0 18px rgba(0, 180, 216, 0.45);
@@ -509,7 +509,7 @@ code {
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--proxora-pink), var(--proxora-purple), transparent);
+  background: linear-gradient(90deg, transparent, var(--brand-pink), var(--brand-purple), transparent);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
@@ -526,7 +526,7 @@ code {
   font-family: var(--font-display);
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--proxora-blue);
+  color: var(--brand-cyan);
   text-transform: uppercase;
   letter-spacing: 0.18em;
 }
@@ -1089,7 +1089,7 @@ textarea { resize: vertical; min-height: 88px; }
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--proxora-pink), var(--proxora-purple), transparent);
+  background: linear-gradient(90deg, transparent, var(--brand-pink), var(--brand-purple), transparent);
   opacity: 1;
 }
 
@@ -1863,7 +1863,7 @@ pre.output {
 }
 
 .files-download-progress .files-download-progress-bar {
-  background: var(--proxora-blue);
+  background: var(--brand-cyan);
 }
 
 .files-content {
@@ -2173,5 +2173,5 @@ pre.output {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .proxora-orb { animation: none; }
+  .ui-orb { animation: none; }
 }

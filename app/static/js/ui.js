@@ -62,10 +62,10 @@
     label.className = 'form-group';
     label.textContent = options.label || '';
     var input = document.createElement('input');
-    input.type = 'text';
+    input.type = options.inputType === 'password' ? 'password' : 'text';
     input.className = 'ui-prompt-input';
     input.value = options.defaultValue || '';
-    input.autocomplete = 'off';
+    input.autocomplete = options.inputType === 'password' ? 'current-password' : 'off';
     label.appendChild(input);
     modalBody.appendChild(label);
 
@@ -176,6 +176,9 @@
   function bindFormLoading() {
     document.querySelectorAll('form[data-loading]').forEach(function (form) {
       form.addEventListener('submit', function () {
+        if (form.hasAttribute('data-reauth') && form.dataset.reauthDone !== '1') {
+          return;
+        }
         var btn = form.querySelector('button[type="submit"]');
         if (!btn || btn.disabled) return;
         btn.disabled = true;
@@ -227,9 +230,52 @@
     }, 8000);
   }
 
-  window.SambaUI = {
+  function bindReauthForms() {
+    document.querySelectorAll('form[data-reauth]').forEach(function (form) {
+      form.addEventListener('submit', function (e) {
+        if (form.dataset.reauthDone === '1') {
+          delete form.dataset.reauthDone;
+          return;
+        }
+        e.preventDefault();
+        var api = window.Sambora || window.SambaUI;
+        if (!api || !api.promptPassword) {
+          return;
+        }
+        api.promptPassword({
+          title: form.getAttribute('data-reauth-title') || 'Passwort bestätigen',
+          okLabel: 'Bestätigen',
+        }).then(function (password) {
+          if (!password) return;
+          var input = form.querySelector('input[name="confirm_password"]');
+          if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'confirm_password';
+            form.appendChild(input);
+          }
+          input.value = password;
+          form.dataset.reauthDone = '1';
+          if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+          } else {
+            form.submit();
+          }
+        });
+      });
+    });
+  }
+
+  window.Sambora = {
     confirm: openModal,
     prompt: openPrompt,
+    promptPassword: function (options) {
+      options = options || {};
+      options.inputType = 'password';
+      options.label = options.label || 'Admin-Passwort';
+      options.title = options.title || 'Passwort bestätigen';
+      return openPrompt(options);
+    },
     toast: showToast,
     formatSize: formatSize,
     csrfToken: function () {
@@ -237,6 +283,7 @@
       return meta ? meta.getAttribute('content') : '';
     },
   };
+  window.SambaUI = window.Sambora;
 
   window.showToast = showToast;
 
@@ -245,6 +292,7 @@
     bindConfirmForms();
     bindToastDismiss();
     bindFormLoading();
+    bindReauthForms();
     bindSidebar();
   });
 })();

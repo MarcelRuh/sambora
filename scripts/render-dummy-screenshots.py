@@ -194,7 +194,8 @@ def apply_patches() -> None:
     dashboard.run_testparm = testparm_fn
     dashboard.get_overview_safe = overview_fn
     dashboard.get_smb_status_safe = smb_fn
-    dashboard.INITIAL_PASSWORD_FILE = "/tmp/sambora-demo-no-initial-password.txt"
+    import app.auth as auth_mod
+    auth_mod.INITIAL_PASSWORD_FILE = "/tmp/sambora-demo-no-initial-password.txt"
 
     shares.read_shares = shares_fn
     users.list_samba_users = users_fn

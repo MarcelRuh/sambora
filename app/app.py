@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import Flask, render_template, request
 
-from app.auth import configure_session, is_authenticated
+from app.auth import configure_session, enforce_password_change, is_authenticated, password_change_required
 from app.config import DEFAULT_MAX_UPLOAD_BYTES, ConfigError, load_config
 from app.csrf import get_csrf_token, validate_csrf_token
 from app.app_updates import get_app_update_info
@@ -30,6 +30,10 @@ def create_app() -> Flask:
         if request.endpoint == "static":
             return
         validate_csrf_token()
+
+    @app.before_request
+    def _force_password_change():
+        return enforce_password_change()
 
     @app.after_request
     def _security_headers(response):
@@ -70,6 +74,7 @@ def create_app() -> Flask:
             "public_url": public_url(cfg, access_host),
             "csrf_token": get_csrf_token,
             "app_update": app_update,
+            "force_password_change": password_change_required(),
         }
 
     register_routes(app)

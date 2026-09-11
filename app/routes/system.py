@@ -6,7 +6,7 @@ from flask import Flask, flash, jsonify, render_template, request
 
 from app.app_updates import get_app_update_info
 from app.audit import audit_log
-from app.auth import login_required
+from app.auth import login_required, reauth_failure_response, verify_admin_reauth
 from app.config import load_config
 from app.system import (
     SystemUpdateError,
@@ -49,21 +49,24 @@ def register(app: Flask) -> None:
             action = (request.form.get("action") or "").strip()
             try:
                 if action == "update":
-                    last_output = apt_update()
-                    last_success = True
-                    audit_log("system.apt_update")
-                    flash("Paketlisten wurden aktualisiert.", "success")
-                    try:
-                        upgradable_packages, check_out = apt_list_upgradable()
-                        if upgradable_packages:
-                            last_output = f"{last_output}\n\n{check_out}"
-                        else:
-                            last_output = (
-                                f"{last_output}\n\n"
-                                "Keine aktualisierbaren Pakete (System ist aktuell)."
-                            )
-                    except SystemUpdateError:
-                        pass
+                    if not verify_admin_reauth():
+                        flash("Admin-Passwort erforderlich.", "error")
+                    else:
+                        last_output = apt_update()
+                        last_success = True
+                        audit_log("system.apt_update")
+                        flash("Paketlisten wurden aktualisiert.", "success")
+                        try:
+                            upgradable_packages, check_out = apt_list_upgradable()
+                            if upgradable_packages:
+                                last_output = f"{last_output}\n\n{check_out}"
+                            else:
+                                last_output = (
+                                    f"{last_output}\n\n"
+                                    "Keine aktualisierbaren Pakete (System ist aktuell)."
+                                )
+                        except SystemUpdateError:
+                            pass
                 else:
                     flash("Unbekannte Aktion.", "error")
             except SystemUpdateError as exc:
@@ -102,6 +105,8 @@ def register(app: Flask) -> None:
     @app.route("/system/updates/job/start", methods=["POST"])
     @login_required
     def system_updates_job_start():
+        if not verify_admin_reauth():
+            return reauth_failure_response()
         try:
             apt_start_install_job()
             return jsonify({"ok": True, "status": "running"})
@@ -119,6 +124,8 @@ def register(app: Flask) -> None:
     @app.route("/system/updates/app/start", methods=["POST"])
     @login_required
     def system_updates_app_start():
+        if not verify_admin_reauth():
+            return reauth_failure_response()
         try:
             app_update_start()
             audit_log("system.app_update")
@@ -137,6 +144,8 @@ def register(app: Flask) -> None:
     @app.route("/system/updates/reboot", methods=["POST"])
     @login_required
     def system_updates_reboot():
+        if not verify_admin_reauth():
+            return reauth_failure_response()
         try:
             message = system_reboot()
             audit_log("system.reboot")

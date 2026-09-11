@@ -8,10 +8,16 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from app.http import safe_redirect_hostname  # noqa: E402
+
 CONFIG_PATH = Path("/etc/simple-samba-ui/config.json")
 
 
-def load_redirect_config() -> tuple[str, int, int]:
+def load_redirect_config() -> tuple[str, int, int, str]:
     if not CONFIG_PATH.is_file():
         raise SystemExit(f"Konfiguration nicht gefunden: {CONFIG_PATH}")
     cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -20,19 +26,25 @@ def load_redirect_config() -> tuple[str, int, int]:
     host = str(cfg.get("bind_host", "0.0.0.0"))
     http_port = int(cfg.get("http_port", 0) or 0)
     https_port = int(cfg.get("bind_port", 8443))
+    public_hostname = str(cfg.get("public_hostname") or "").strip()
     if http_port <= 0:
         raise SystemExit("http_port nicht konfiguriert.")
     if http_port == https_port:
         raise SystemExit("http_port und bind_port dürfen nicht identisch sein.")
-    return host, http_port, https_port
+    return host, http_port, https_port, public_hostname
 
 
 class RedirectHandler(BaseHTTPRequestHandler):
     https_port: int = 8443
+    bind_host: str = "0.0.0.0"
+    public_hostname: str = ""
 
     def _redirect(self) -> None:
-        host_header = (self.headers.get("Host") or "").strip()
-        hostname = host_header.split(":", 1)[0] if host_header else "localhost"
+        hostname = safe_redirect_hostname(
+            self.headers.get("Host") or "",
+            bind_host=self.bind_host,
+            public_hostname=self.public_hostname,
+        )
         port = self.https_port
         if port == 443:
             location = f"https://{hostname}{self.path}"
@@ -67,8 +79,10 @@ class RedirectHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    host, http_port, https_port = load_redirect_config()
+    host, http_port, https_port, public_hostname = load_redirect_config()
     RedirectHandler.https_port = https_port
+    RedirectHandler.bind_host = host
+    RedirectHandler.public_hostname = public_hostname
     bind = host if host not in ("", "0.0.0.0", "::") else ""
     server = ThreadingHTTPServer((bind, http_port), RedirectHandler)
     sys.stderr.write(

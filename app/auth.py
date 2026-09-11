@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+import logging
+import os
 from datetime import datetime, timedelta, timezone
 from functools import wraps
+from pathlib import Path
 from typing import Any, Callable
 
 import bcrypt
-from flask import Flask, redirect, request, session, url_for
+from flask import Flask, jsonify, redirect, request, session, url_for
 
 from app.config import load_config
+
+_LOG = logging.getLogger(__name__)
+INITIAL_PASSWORD_FILE = "/etc/simple-samba-ui/initial-password.txt"
+_PASSWORD_CHANGE_EXEMPT = frozenset({"login", "logout", "change_password", "static"})
 
 
 def hash_password(password: str) -> str:
@@ -71,6 +78,76 @@ def is_authenticated() -> bool:
         session.clear()
         return False
     return True
+
+
+def initial_password_pending() -> bool:
+    path = Path(INITIAL_PASSWORD_FILE)
+    try:
+        if not path.is_file():
+            return False
+        return bool(path.read_text(encoding="utf-8").strip())
+    except OSError:
+        return False
+
+
+def clear_initial_password_file() -> bool:
+    path = Path(INITIAL_PASSWORD_FILE)
+    try:
+        path.unlink(missing_ok=True)
+        if not path.exists():
+            return True
+    except OSError as exc:
+        _LOG.warning("initial-password.txt nicht löschbar: %s", exc)
+    try:
+        path.write_text("", encoding="utf-8")
+        os.chmod(path, 0o600)
+        return not bool(path.read_text(encoding="utf-8").strip())
+    except OSError as exc:
+        _LOG.warning("initial-password.txt nicht leeren: %s", exc)
+        return False
+
+
+def password_change_required() -> bool:
+    return is_authenticated() and initial_password_pending()
+
+
+def read_reauth_password() -> str:
+    data = request.get_json(silent=True)
+    if isinstance(data, dict):
+        raw = data.get("password") or data.get("confirm_password")
+        if raw:
+            return str(raw)
+    return (
+        request.form.get("confirm_password")
+        or request.form.get("admin_password")
+        or ""
+    )
+
+
+def verify_admin_reauth(password: str | None = None) -> bool:
+    secret = read_reauth_password() if password is None else password
+    if not secret:
+        return False
+    config = load_config()
+    return verify_password(secret, config["admin_password_hash"])
+
+
+def reauth_failure_response():
+    return jsonify({"ok": False, "error": "Admin-Passwort erforderlich."}), 403
+
+
+def enforce_password_change():
+    if request.endpoint in _PASSWORD_CHANGE_EXEMPT or request.endpoint is None:
+        return None
+    if not password_change_required():
+        return None
+    if request.path.startswith("/api/") or request.is_json:
+        return jsonify({
+            "ok": False,
+            "error": "Admin-Passwort muss zuerst geändert werden.",
+            "code": "password_change_required",
+        }), 403
+    return redirect(url_for("change_password"))
 
 
 def login_required(view: Callable[..., Any]) -> Callable[..., Any]:

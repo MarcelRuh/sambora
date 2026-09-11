@@ -17,8 +17,12 @@
     done: 100,
   };
 
+  function ui() {
+    return window.Sambora || window.SambaUI;
+  }
+
   function csrfToken() {
-    return window.SambaUI ? window.SambaUI.csrfToken() : '';
+    return ui() ? ui().csrfToken() : '';
   }
 
   function showToast(message, type) {
@@ -86,53 +90,59 @@
       });
   }
 
+  function postDestructive(url, payload) {
+    return fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'X-CSRF-Token': csrfToken(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload || {}),
+    }).then(function (res) {
+      return res.json().then(function (body) {
+        return { ok: res.ok, body: body };
+      });
+    });
+  }
+
   function confirmSystemReboot() {
-    if (!window.SAMBA_SYSTEM_REBOOT_URL || !window.SambaUI) {
+    if (!window.SAMBA_SYSTEM_REBOOT_URL || !ui()) {
       return Promise.resolve(false);
     }
 
-    return window.SambaUI.confirm(
+    return ui().confirm(
       'Das System wird neu gestartet. Offene Verbindungen werden getrennt. Fortfahren?',
       { title: 'Neustart bestätigen', danger: true, okLabel: 'Neustart' }
     ).then(function (ok) {
       if (!ok) return false;
-
-      return fetch(window.SAMBA_SYSTEM_REBOOT_URL, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'X-CSRF-Token': csrfToken(),
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(function (res) {
-          return res.json().then(function (body) {
-            return { ok: res.ok, body: body };
+      return ui().promptPassword({ title: 'Neustart bestätigen' }).then(function (password) {
+        if (!password) return false;
+        return postDestructive(window.SAMBA_SYSTEM_REBOOT_URL, { password: password })
+          .then(function (result) {
+            if (result.ok) {
+              showToast(result.body.message || 'System startet neu …', 'success');
+              return true;
+            }
+            showToast(result.body.error || 'Neustart fehlgeschlagen.', 'error');
+            return false;
+          })
+          .catch(function () {
+            showToast('Verbindungsfehler beim Neustart.', 'error');
+            return false;
           });
-        })
-        .then(function (result) {
-          if (result.ok) {
-            showToast(result.body.message || 'System startet neu …', 'success');
-            return true;
-          }
-          showToast(result.body.error || 'Neustart fehlgeschlagen.', 'error');
-          return false;
-        })
-        .catch(function () {
-          showToast('Verbindungsfehler beim Neustart.', 'error');
-          return false;
-        });
+      });
     });
   }
 
   function promptRebootAfterUpgrade() {
-    if (!window.SambaUI) {
+    if (!ui()) {
       showToast('Updates installiert. Neustart ausstehend.', 'success');
       setTimeout(function () { window.location.reload(); }, 1500);
       return;
     }
 
-    window.SambaUI.confirm(
+    ui().confirm(
       'Updates installiert. Ein Neustart ist erforderlich. Jetzt neu starten?',
       { title: 'Neustart bestätigen', danger: true, okLabel: 'Neustart', cancelLabel: 'Später' }
     ).then(function (ok) {
@@ -147,61 +157,52 @@
 
   function startJob(options) {
     var url = options.startUrl;
-    if (!url || !window.SambaUI) return;
+    if (!url || !ui()) return;
 
-    window.SambaUI.confirm(options.confirmText, {
+    ui().confirm(options.confirmText, {
       title: options.confirmTitle,
       danger: !!options.danger,
     }).then(function (ok) {
       if (!ok) return;
+      return ui().promptPassword({ title: options.confirmTitle }).then(function (password) {
+        if (!password) return;
 
-      showProgressCard(options.prefix);
-      setProgress(options.prefix, 'start', options.progressMap);
+        showProgressCard(options.prefix);
+        setProgress(options.prefix, 'start', options.progressMap);
 
-      var button = document.getElementById(options.buttonId);
-      if (button) {
-        button.disabled = true;
-        button.textContent = 'Wird ausgeführt …';
-      }
+        var button = document.getElementById(options.buttonId);
+        if (button) {
+          button.disabled = true;
+          button.textContent = 'Wird ausgeführt …';
+        }
 
-      fetch(url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'X-CSRF-Token': csrfToken(),
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(function (res) {
-          return res.json().then(function (body) {
-            return { ok: res.ok, body: body };
-          });
-        })
-        .then(function (result) {
-          if (!result.ok) {
-            showToast(result.body.error || 'Start fehlgeschlagen.', 'error');
+        postDestructive(url, { password: password })
+          .then(function (result) {
+            if (!result.ok) {
+              showToast(result.body.error || 'Start fehlgeschlagen.', 'error');
+              if (button) {
+                button.disabled = false;
+                button.textContent = options.buttonIdleText;
+              }
+              return;
+            }
+            pollJob(
+              options.prefix,
+              options.jobUrl,
+              options.progressMap,
+              options.buttonId,
+              options.buttonIdleText,
+              options.onSuccess
+            );
+          })
+          .catch(function () {
+            showToast('Verbindungsfehler beim Start.', 'error');
             if (button) {
               button.disabled = false;
               button.textContent = options.buttonIdleText;
             }
-            return;
-          }
-          pollJob(
-            options.prefix,
-            options.jobUrl,
-            options.progressMap,
-            options.buttonId,
-            options.buttonIdleText,
-            options.onSuccess
-          );
-        })
-        .catch(function () {
-          showToast('Verbindungsfehler beim Start.', 'error');
-          if (button) {
-            button.disabled = false;
-            button.textContent = options.buttonIdleText;
-          }
-        });
+          });
+      });
     });
   }
 

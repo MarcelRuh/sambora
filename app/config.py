@@ -35,6 +35,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "tls_enabled": True,
     "tls_cert_file": "/etc/simple-samba-ui/tls/server.crt",
     "tls_key_file": "/etc/simple-samba-ui/tls/server.key",
+    "public_hostname": "",
 }
 
 

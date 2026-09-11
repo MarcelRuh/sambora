@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import os
-
 from flask import Flask, flash, render_template, url_for
 
-from app.auth import login_required
+from app.auth import initial_password_pending, login_required
 from app.config import load_config
 from app.security_checks import share_security_warnings
 from app.samba import SambaError, list_samba_users, read_shares, run_testparm, service_status
 from app.system import format_bytes, format_uptime, get_overview_safe, get_smb_status_safe
-
-INITIAL_PASSWORD_FILE = "/etc/simple-samba-ui/initial-password.txt"
 
 
 def _share_preview(shares: list, *, limit: int = 5) -> list:
@@ -151,7 +147,7 @@ def register(app: Flask) -> None:
             (s for s in shares if s.enabled),
             key=lambda item: item.name.lower(),
         )
-        initial_password_exists = os.path.isfile(INITIAL_PASSWORD_FILE)
+        initial_password_exists = initial_password_pending()
 
         return render_template(
             "dashboard.html",

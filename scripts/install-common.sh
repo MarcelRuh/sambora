@@ -217,6 +217,9 @@ install_systemd_units() {
         "${src}/etc/simple-samba-ui.service" >/etc/systemd/system/simple-samba-ui.service
     sed "s|@SHARES_BASE@|${shares_base}|g" \
         "${src}/etc/simple-samba-ui-priv.service" >/etc/systemd/system/simple-samba-ui-priv.service
+    if [[ -d /etc/logrotate.d && -f "${src}/etc/logrotate.d/simple-samba-ui" ]]; then
+        install -m 644 "${src}/etc/logrotate.d/simple-samba-ui" /etc/logrotate.d/simple-samba-ui
+    fi
 }
 
 ensure_tls_certificates() {
@@ -271,6 +274,7 @@ set_permissions() {
     chmod 755 "${INSTALL_DIR}/scripts/enable-tls.sh" 2>/dev/null || true
     chmod 755 "${INSTALL_DIR}/scripts/start-web.sh" 2>/dev/null || true
     chmod 755 "${INSTALL_DIR}/scripts/http-redirect-server.py" 2>/dev/null || true
+    chmod 755 "${INSTALL_DIR}/scripts/hash-admin-password.py" 2>/dev/null || true
     chmod 755 "${INSTALL_DIR}/scripts/migrate-https-config.py" 2>/dev/null || true
     chmod 755 "${INSTALL_DIR}/scripts/ensure-git-identity.sh" 2>/dev/null || true
     mkdir -p "${CONFIG_DIR}" "${BACKUP_DIR}"
@@ -417,10 +421,8 @@ verify_installation() {
 
 generate_bcrypt_hash() {
     local password="$1"
-    "${INSTALL_DIR}/venv/bin/python3" -c "
-import bcrypt
-print(bcrypt.hashpw('${password}'.encode(), bcrypt.gensalt(rounds=12)).decode())
-"
+    printf '%s' "${password}" | "${INSTALL_DIR}/venv/bin/python3" "${INSTALL_DIR}/scripts/hash-admin-password.py"
+    echo
 }
 
 write_initial_config() {

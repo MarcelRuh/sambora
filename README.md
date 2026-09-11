@@ -2,7 +2,7 @@
 
 Samba Management Suite – interne Web-Verwaltung für Samba-Freigaben auf Debian.
 
-**Aktuelle Version:** v1.23.0
+**Aktuelle Version:** v1.24.0
 
 ## Screenshots
 
@@ -26,7 +26,7 @@ Dummy-Daten (keine echten Hostnamen, Benutzer oder Pfade).
 
 ## Features
 
-- **Proxora-Design** – Neon-UI analog zu [Proxora](https://github.com/MarcelRuh/proxora) (Orbitron, Pink/Purple, Sidebar)
+- **Neon-Design** – analog zu [Proxora](https://github.com/MarcelRuh/proxora) (Orbitron, Pink/Purple, Sidebar)
 - SMB-Freigaben anlegen, bearbeiten, aktivieren/deaktivieren
 - Samba-Benutzer verwalten (`smbpasswd`)
 - Dienststatus & Konfigurationsprüfung (`testparm`)
@@ -219,6 +219,7 @@ Relevante `config.json`-Felder:
 | `tls_enabled` | `true` | HTTPS erforderlich |
 | `bind_port` | `8443` | HTTPS-Port (Gunicorn) |
 | `http_port` | `8080` | HTTP-Redirect-Port |
+| `public_hostname` | *(leer)* | Optionaler Hostname für HTTP→HTTPS-Redirect |
 | `max_folder_download_files` | `5000` | Max. Dateien pro Ordner-ZIP |
 | `max_folder_download_bytes` | `21474836480` (20 GiB) | Max. Gesamtgröße pro Ordner-ZIP |
 
@@ -228,7 +229,10 @@ Relevante `config.json`-Felder:
 - Admin-Passwort als **bcrypt-Hash**
 - **HTTPS** standardmäßig aktiv – alternativ SSH-Tunnel auf den HTTPS-Port
 - Dashboard warnt bei Gast-Freigaben und Shares ohne Benutzer
-- Nach Installation: Admin-Passwort ändern, `initial-password.txt` löschen
+- Nach Installation: **Passwortwechsel beim ersten Login erzwungen**, `initial-password.txt` wird danach gelöscht
+- HTTP→HTTPS-Redirect akzeptiert den `Host`-Header nur für lokale/private Namen (optional `public_hostname`)
+- apt, App-Update und Reboot verlangen das **Admin-Passwort erneut**
+- Audit-Protokoll mit Rotation (logrotate + Größenlimit)
 - Nicht ungefiltert ins Internet stellen
 - Temporäre Upload-/Download-Dateien werden automatisch bereinigt (älter als 1 Stunde)
 
