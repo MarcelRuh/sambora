@@ -196,22 +196,25 @@ code {
 }
 
 .sidebar-brand {
-  padding: 1.1rem 0.85rem 0.75rem;
-  display: flex;
-  align-items: center;
+  padding: 0;
+  display: block;
 }
 
 .sidebar-brand .logo {
-  display: flex;
-  align-items: center;
+  display: block;
+  width: 100%;
   color: var(--text);
 }
 
 .sidebar-brand .logo:hover { text-decoration: none; color: var(--text); }
 
-.sidebar-brand .brand-mark {
-  width: 48px;
-  height: 48px;
+.sidebar-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  background: #05060c;
 }
 
 .logo-icon {
