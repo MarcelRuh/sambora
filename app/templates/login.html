@@ -4,9 +4,7 @@
 <div class="login-page">
   <div class="login-card">
     <div class="login-brand">
-      {% set mark_id = 'smb-mark-login' %}{% include '_brand_mark.html' %}
-      <h1 class="proxora-logo">SAMBA</h1>
-      <p class="subtitle">Interne Samba-Verwaltung</p>
+      <img class="login-logo" src="{{ url_for('static', filename='img/sambora-logo.jpg') }}" alt="Sambora">
     </div>
     {% if error %}
     <div class="notice notice-error" role="alert">

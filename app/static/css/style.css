@@ -166,7 +166,7 @@ code {
   height: 44px;
   flex-shrink: 0;
   display: block;
-  filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.25));
+  object-fit: contain;
 }
 
 .topbar-logo .brand-mark {
@@ -1078,14 +1078,16 @@ textarea { resize: vertical; min-height: 88px; }
 }
 
 .login-brand {
-  text-align: left;
-  margin-bottom: 1.75rem;
+  text-align: center;
+  margin: -0.75rem -0.75rem 1rem;
 }
 
-.login-brand .brand-mark {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 0.85rem;
+.login-logo {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  margin: 0 auto;
 }
 
 .login-brand h1 {

@@ -2,7 +2,7 @@
 
 Interne Web-Verwaltung für Samba-Freigaben auf Debian – klein, ohne Reverse Proxy, ohne nginx/Caddy/Apache.
 
-**Aktuelle Version:** v1.19.0
+**Aktuelle Version:** v1.19.1
 
 ## Screenshots
 
