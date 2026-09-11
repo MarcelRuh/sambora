@@ -226,16 +226,19 @@ code {
 .logo-word {
   font-size: 1.05rem;
   letter-spacing: 0.14em;
+  isolation: isolate;
 }
 
 .logo-sub {
   margin-top: 0.18rem;
   font-size: 0.55rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--proxora-blue);
-  text-shadow: 0 0 14px rgba(0, 180, 216, 0.45);
+  color: rgba(255, 255, 255, 0.42);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.42);
+  text-shadow: none;
+  filter: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1741,6 +1744,10 @@ pre.output {
   line-height: 1.4;
 }
 
+.files-download-hint[hidden] {
+  display: none;
+}
+
 .files-breadcrumb {
   display: flex;
   align-items: center;
@@ -2163,4 +2170,8 @@ pre.output {
   background: var(--bg-elevated);
   color: var(--text);
   font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proxora-orb { animation: none; }
 }

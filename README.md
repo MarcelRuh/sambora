@@ -2,21 +2,27 @@
 
 Samba Management Suite – interne Web-Verwaltung für Samba-Freigaben auf Debian.
 
-**Aktuelle Version:** v1.22.1
+**Aktuelle Version:** v1.23.0
 
 ## Screenshots
 
-| Dashboard | Benutzer |
+Dummy-Daten (keine echten Hostnamen, Benutzer oder Pfade).
+
+| Dashboard | Freigaben |
 |-----------|----------|
-| ![Freigaben](docs/screenshots/Freigaben.png) | ![Benutzer](docs/screenshots/Benutzer.png) |
+| ![Dashboard](docs/screenshots/Dashboard.png) | ![Freigaben](docs/screenshots/Freigaben.png) |
 
-| Datei-Explorer | Status |
-|----------------|--------|
-| ![Dateien](docs/screenshots/Dateien.png) | ![Status](docs/screenshots/Status.png) |
+| Benutzer | Datei-Explorer |
+|----------|----------------|
+| ![Benutzer](docs/screenshots/Benutzer.png) | ![Dateien](docs/screenshots/Dateien.png) |
 
-| Updates | Admin-Passwort |
-|---------|----------------|
-| ![Updates](docs/screenshots/Updates.png) | ![Admin-Passwort](docs/screenshots/Passwort.png) |
+| Status | Updates |
+|--------|---------|
+| ![Status](docs/screenshots/Status.png) | ![Updates](docs/screenshots/Updates.png) |
+
+| Admin-Passwort |
+|----------------|
+| ![Admin-Passwort](docs/screenshots/Passwort.png) |
 
 ## Features
 
