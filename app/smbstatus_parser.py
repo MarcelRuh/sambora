@@ -53,7 +53,11 @@ def unique_error_text(*parts: str) -> str:
 
 def humanize_smbstatus_error(err: str) -> str:
     low = (err or "").lower()
-    if "could not determine network interfaces" in low or "interfaces config line" in low:
+    if (
+        "could not determine network interfaces" in low
+        or "interfaces config line" in low
+        or "no network interfaces found" in low
+    ):
         return (
             "Samba findet keine Netzwerkschnittstellen. "
             "In /etc/samba/smb.conf unter [global] z. B. "

@@ -253,3 +253,39 @@ def test_cmd_pdbedit_list_humanizes_interfaces_error(monkeypatch, tmp_path):
     assert not ok
     assert "Netzwerkschnittstellen" in output
     assert "ERROR:" not in output
+
+
+def test_cmd_pdbedit_list_retries_on_warning_and_drops_stderr(monkeypatch, tmp_path):
+    import subprocess
+
+    daemon = _load_daemon_module()
+
+    def fake_run_cmd(cmd, input_data=None, timeout=120):
+        if "-s" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, stdout="alice:1001:\n", stderr="")
+        return subprocess.CompletedProcess(
+            cmd,
+            0,
+            stdout="alice:1001:\n",
+            stderr="WARNING: no network interfaces found\n",
+        )
+
+    monkeypatch.setattr(daemon, "run_cmd", fake_run_cmd)
+    monkeypatch.setattr(daemon, "SMB_CONF", tmp_path / "smb.conf")
+    (tmp_path / "smb.conf").write_text("[global]\n", encoding="utf-8")
+
+    ok, output = daemon.cmd_pdbedit_list()
+    assert ok
+    assert output == "alice:1001:"
+    assert "WARNING" not in output
+
+
+def test_parse_pdbedit_users_ignores_warnings():
+    from app.samba import parse_pdbedit_users
+
+    output = (
+        "WARNING: no network interfaces found\n"
+        "alice:1001:Alice:/home/alice:/usr/sbin/nologin\n"
+        "ERROR: Could not determine network interfaces, you must use a interfaces config line\n"
+    )
+    assert parse_pdbedit_users(output) == ["alice"]

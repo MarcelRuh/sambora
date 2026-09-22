@@ -13,6 +13,7 @@ from typing import Any
 from app.validators import ValidationError, validate_comment, validate_share_name, validate_share_path
 
 PRIV_SOCKET = "/run/simple-samba-ui/priv.sock"
+_PDBEDIT_USER_RE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]{0,31}):\d+:")
 SOCKET_TIMEOUT = 120
 PRIV_SOCKET_RETRIES = 5
 PRIV_SOCKET_RETRY_DELAY = 0.4
@@ -243,19 +244,21 @@ def run_testparm() -> dict[str, str]:
     }
 
 
+def parse_pdbedit_users(output: str) -> list[str]:
+    """Nur echte pdbedit-Zeilen (name:uid:…), keine WARNING/ERROR-Meldungen."""
+    users: list[str] = []
+    for line in (output or "").splitlines():
+        match = _PDBEDIT_USER_RE.match(line.strip())
+        if match:
+            users.append(match.group(1).lower())
+    return sorted(set(users))
+
+
 def list_samba_users() -> list[str]:
     ok, output = _priv_request("pdbedit-list")
     if not ok:
         raise SambaError(f"pdbedit fehlgeschlagen: {output}")
-    users = []
-    for line in output.splitlines():
-        line = line.strip()
-        if not line or line.upper().startswith("ERROR"):
-            continue
-        username = line.split(":", 1)[0]
-        if username:
-            users.append(username)
-    return sorted(set(users))
+    return parse_pdbedit_users(output)
 
 
 def add_samba_user(username: str, password: str) -> None:

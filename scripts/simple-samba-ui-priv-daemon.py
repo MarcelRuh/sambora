@@ -125,7 +125,11 @@ def _ensure_app_import_path() -> None:
 
 def _is_interfaces_error(text: str) -> bool:
     low = (text or "").lower()
-    return "could not determine network interfaces" in low or "interfaces config line" in low
+    return (
+        "could not determine network interfaces" in low
+        or "interfaces config line" in low
+        or "no network interfaces found" in low
+    )
 
 
 def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
@@ -161,18 +165,21 @@ def _run_cmd_with_interfaces_retry(
 ) -> subprocess.CompletedProcess[str]:
     """Wiederholt Samba-Tools mit temporärer interfaces-Zeile, falls nötig."""
     result = run_cmd(cmd, input_data=input_data, timeout=timeout)
-    if result.returncode == 0 or not _is_interfaces_error(_combined_output(result)):
+    if not _is_interfaces_error(_combined_output(result)):
         return result
     wrapper: Path | None = None
+    retry = result
     try:
         wrapper = _write_interfaces_wrapper()
         retry_cmd = [cmd[0], config_flag, str(wrapper), *cmd[1:]]
-        result = run_cmd(retry_cmd, input_data=input_data, timeout=timeout)
+        retry = run_cmd(retry_cmd, input_data=input_data, timeout=timeout)
     except OSError:
-        pass
+        return result
     finally:
         if wrapper is not None:
             wrapper.unlink(missing_ok=True)
+    if retry.returncode == 0 or result.returncode != 0:
+        return retry
     return result
 
 
@@ -1152,10 +1159,9 @@ def cmd_testparm() -> tuple[bool, str]:
 
 def cmd_pdbedit_list() -> tuple[bool, str]:
     result = _run_cmd_with_interfaces_retry([PDBEDIT, "-L"])
-    output = _combined_output(result)
     if result.returncode == 0:
-        return True, output
-    return False, _humanize_interfaces_error(output, "pdbedit fehlgeschlagen.")
+        return True, (result.stdout or "").strip()
+    return False, _humanize_interfaces_error(_combined_output(result), "pdbedit fehlgeschlagen.")
 
 
 def cmd_pdbedit_delete(username: str) -> tuple[bool, str]:

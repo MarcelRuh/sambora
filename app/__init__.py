@@ -1,3 +1,3 @@
 """Sambora – interne Web-Verwaltung für Samba-Freigaben."""
 
-__version__ = "1.24.1"
+__version__ = "1.24.2"
