@@ -123,6 +123,59 @@ def _ensure_app_import_path() -> None:
         sys.path.insert(0, root)
 
 
+def _is_interfaces_error(text: str) -> bool:
+    low = (text or "").lower()
+    return "could not determine network interfaces" in low or "interfaces config line" in low
+
+
+def _combined_output(result: subprocess.CompletedProcess[str]) -> str:
+    return ((result.stdout or "") + (result.stderr or "")).strip()
+
+
+def _write_interfaces_wrapper() -> Path:
+    fd, name = tempfile.mkstemp(prefix="sambora-smb.", suffix=".conf")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        if SMB_CONF.is_file():
+            fh.write(f"include = {SMB_CONF}\n\n")
+        fh.write("[global]\n    interfaces = 127.0.0.0/8 0.0.0.0/0\n")
+    os.chmod(name, 0o644)
+    return Path(name)
+
+
+def _humanize_interfaces_error(err: str, fallback: str) -> str:
+    if _is_interfaces_error(err):
+        return (
+            "Samba findet keine Netzwerkschnittstellen. "
+            "In /etc/samba/smb.conf unter [global] z. B. "
+            "interfaces = 127.0.0.0/8 0.0.0.0/0 setzen und smbd neu laden."
+        )
+    return (err or "").strip() or fallback
+
+
+def _run_cmd_with_interfaces_retry(
+    cmd: list[str],
+    *,
+    config_flag: str = "-s",
+    input_data: str | None = None,
+    timeout: int = 120,
+) -> subprocess.CompletedProcess[str]:
+    """Wiederholt Samba-Tools mit temporärer interfaces-Zeile, falls nötig."""
+    result = run_cmd(cmd, input_data=input_data, timeout=timeout)
+    if result.returncode == 0 or not _is_interfaces_error(_combined_output(result)):
+        return result
+    wrapper: Path | None = None
+    try:
+        wrapper = _write_interfaces_wrapper()
+        retry_cmd = [cmd[0], config_flag, str(wrapper), *cmd[1:]]
+        result = run_cmd(retry_cmd, input_data=input_data, timeout=timeout)
+    except OSError:
+        pass
+    finally:
+        if wrapper is not None:
+            wrapper.unlink(missing_ok=True)
+    return result
+
+
 def _shares_file_path() -> Path:
     cfg = load_app_config()
     return Path(cfg.get("samba_shares_file") or str(TARGET))
@@ -1098,9 +1151,11 @@ def cmd_testparm() -> tuple[bool, str]:
 
 
 def cmd_pdbedit_list() -> tuple[bool, str]:
-    result = run_cmd([PDBEDIT, "-L"])
-    output = ((result.stdout or "") + (result.stderr or "")).strip()
-    return result.returncode == 0, output
+    result = _run_cmd_with_interfaces_retry([PDBEDIT, "-L"])
+    output = _combined_output(result)
+    if result.returncode == 0:
+        return True, output
+    return False, _humanize_interfaces_error(output, "pdbedit fehlgeschlagen.")
 
 
 def cmd_pdbedit_delete(username: str) -> tuple[bool, str]:
@@ -1109,10 +1164,12 @@ def cmd_pdbedit_delete(username: str) -> tuple[bool, str]:
     except ValueError as exc:
         return False, str(exc)
 
-    result = run_cmd([PDBEDIT, "-x", user])
-    output = ((result.stdout or "") + (result.stderr or "")).strip()
+    result = _run_cmd_with_interfaces_retry([PDBEDIT, "-x", user])
+    output = _combined_output(result)
     if result.returncode != 0:
-        return False, output or "Samba-Benutzer konnte nicht gelöscht werden."
+        return False, _humanize_interfaces_error(
+            output, "Samba-Benutzer konnte nicht gelöscht werden."
+        )
 
     remove_unix_user_if_safe(user)
     return True, output or f"Benutzer {user} gelöscht."
@@ -1130,10 +1187,16 @@ def cmd_smbpasswd_add(username: str, body: str) -> tuple[bool, str]:
 
     if not body.endswith("\n"):
         body = body + "\n"
-    result = run_cmd([SMBPASSWD, "-a", "-s", user], input_data=body)
-    output = ((result.stdout or "") + (result.stderr or "")).strip()
+    result = _run_cmd_with_interfaces_retry(
+        [SMBPASSWD, "-a", "-s", user],
+        config_flag="-c",
+        input_data=body,
+    )
+    output = _combined_output(result)
     if result.returncode != 0:
-        return False, output or "Samba-Passwort konnte nicht gesetzt werden."
+        return False, _humanize_interfaces_error(
+            output, "Samba-Passwort konnte nicht gesetzt werden."
+        )
     return True, f"{user_msg}\n{output}".strip()
 
 
@@ -1149,9 +1212,15 @@ def cmd_smbpasswd_set(username: str, body: str) -> tuple[bool, str]:
         )
     if not body.endswith("\n"):
         body = body + "\n"
-    result = run_cmd([SMBPASSWD, "-s", user], input_data=body)
-    output = ((result.stdout or "") + (result.stderr or "")).strip()
-    return result.returncode == 0, output
+    result = _run_cmd_with_interfaces_retry(
+        [SMBPASSWD, "-s", user],
+        config_flag="-c",
+        input_data=body,
+    )
+    output = _combined_output(result)
+    if result.returncode != 0:
+        return False, _humanize_interfaces_error(output, "Passwort konnte nicht gesetzt werden.")
+    return True, output
 
 
 def _apt_missing_msg() -> str:
@@ -1675,13 +1744,7 @@ def cmd_smb_connections() -> tuple[bool, str]:
 
     wrapper: Path | None = None
     try:
-        fd, name = tempfile.mkstemp(prefix="sambora-smbstatus.", suffix=".conf")
-        wrapper = Path(name)
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            if SMB_CONF.is_file():
-                fh.write(f"include = {SMB_CONF}\n\n")
-            fh.write("[global]\n    interfaces = 127.0.0.0/8 0.0.0.0/0\n")
-        os.chmod(wrapper, 0o644)
+        wrapper = _write_interfaces_wrapper()
         data, err2 = run(wrapper)
         if data is not None:
             return True, json.dumps(data, ensure_ascii=False)

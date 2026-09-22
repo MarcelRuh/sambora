@@ -250,7 +250,7 @@ def list_samba_users() -> list[str]:
     users = []
     for line in output.splitlines():
         line = line.strip()
-        if not line:
+        if not line or line.upper().startswith("ERROR"):
             continue
         username = line.split(":", 1)[0]
         if username:

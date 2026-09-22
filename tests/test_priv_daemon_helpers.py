@@ -211,3 +211,45 @@ def test_cmd_smb_connections_retries_with_interfaces_override(monkeypatch, tmp_p
     assert payload["sessions"] == {}
     assert any("-s" in cmd for cmd in calls)
     assert any("--json" in cmd for cmd in calls)
+
+
+def test_cmd_pdbedit_list_retries_with_interfaces_override(monkeypatch, tmp_path):
+    import subprocess
+
+    daemon = _load_daemon_module()
+    calls: list[list[str]] = []
+
+    def fake_run_cmd(cmd, input_data=None, timeout=120):
+        calls.append(list(cmd))
+        if "-s" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, stdout="alice:1001:\nbob:1002:\n", stderr="")
+        err = "ERROR: Could not determine network interfaces, you must use a interfaces config line\n"
+        return subprocess.CompletedProcess(cmd, 1, stdout="", stderr=err)
+
+    monkeypatch.setattr(daemon, "run_cmd", fake_run_cmd)
+    smb_conf = tmp_path / "smb.conf"
+    smb_conf.write_text("[global]\nworkgroup = TEST\n", encoding="utf-8")
+    monkeypatch.setattr(daemon, "SMB_CONF", smb_conf)
+
+    ok, output = daemon.cmd_pdbedit_list()
+    assert ok
+    assert "alice:1001:" in output
+    assert any(cmd[:2] == [daemon.PDBEDIT, "-s"] for cmd in calls)
+
+
+def test_cmd_pdbedit_list_humanizes_interfaces_error(monkeypatch, tmp_path):
+    import subprocess
+
+    daemon = _load_daemon_module()
+
+    def fake_run_cmd(cmd, input_data=None, timeout=120):
+        err = "ERROR: Could not determine network interfaces, you must use a interfaces config line\n"
+        return subprocess.CompletedProcess(cmd, 1, stdout=err, stderr=err)
+
+    monkeypatch.setattr(daemon, "run_cmd", fake_run_cmd)
+    monkeypatch.setattr(daemon, "SMB_CONF", tmp_path / "missing.conf")
+
+    ok, output = daemon.cmd_pdbedit_list()
+    assert not ok
+    assert "Netzwerkschnittstellen" in output
+    assert "ERROR:" not in output
