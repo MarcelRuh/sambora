@@ -16,7 +16,7 @@ from app.config import load_config
 
 _LOG = logging.getLogger(__name__)
 INITIAL_PASSWORD_FILE = "/etc/simple-samba-ui/initial-password.txt"
-_PASSWORD_CHANGE_EXEMPT = frozenset({"login", "logout", "change_password", "static"})
+_PASSWORD_CHANGE_EXEMPT = frozenset({"login", "logout", "change_password", "static", "health"})
 
 
 def hash_password(password: str) -> str:

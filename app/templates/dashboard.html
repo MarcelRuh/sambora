@@ -3,7 +3,6 @@
 {% block page_heading %}Dashboard{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">System</p>
   <h1>Übersicht</h1>
   <p class="lead">Status von Samba und System – Basis: <code>{{ config.shares_base_path }}</code></p>
 </div>
@@ -25,7 +24,7 @@
 {% endif %}
 
 <div class="stats-grid">
-  <div class="stat-card {% if status.is_running %}accent{% endif %}">
+  <div class="stat-card {% if status.is_running %}tone-ok{% else %}tone-bad{% endif %}">
     <span class="stat-label">Samba-Dienst</span>
     <span class="stat-value">
       {% if status.is_running %}
@@ -36,7 +35,7 @@
     </span>
     <span class="stat-hint">smbd Status</span>
   </div>
-  <a href="{{ url_for('status_page') }}" class="stat-card stat-card-link {% if config_ok is sameas false %}accent{% endif %}" title="Konfiguration &amp; Dienst">
+  <a href="{{ url_for('status_page') }}" class="stat-card stat-card-link {% if config_ok %}tone-ok{% elif config_ok is sameas false %}tone-bad{% endif %}" title="Konfiguration &amp; Dienst">
     <span class="stat-label">Konfiguration</span>
     <span class="stat-value">
       {% if config_ok %}
@@ -66,9 +65,9 @@
     <span class="stat-hint">Samba-Konten · Klicken zum Verwalten</span>
   </a>
   {% if overview %}
-  <div class="stat-card {% if overview.cpu_percent is not none and overview.cpu_percent > 85 %}accent{% elif overview.load_1 > overview.cpu_count %}accent{% endif %}">
+  <div class="stat-card {% if overview.cpu_percent is not none and overview.cpu_percent > 85 %}tone-warn{% elif overview.load_1 > overview.cpu_count %}tone-warn{% endif %}">
     <span class="stat-label">CPU</span>
-    <span class="stat-value" style="font-size:1.15rem">
+    <span class="stat-value u-stat-compact">
       {% if overview.cpu_percent is not none %}{{ overview.cpu_percent }}%{% else %}—{% endif %}
     </span>
     <span class="stat-hint">
@@ -77,13 +76,13 @@
     </span>
     {% if overview.cpu_percent is not none %}
     <div class="dashboard-meter" aria-hidden="true">
-      <div class="dashboard-meter-bar" style="width: {{ [overview.cpu_percent, 100]|min }}%"></div>
+      <div class="dashboard-meter-bar" data-meter="{{ [overview.cpu_percent, 100]|min }}"></div>
     </div>
     {% endif %}
   </div>
-  <div class="stat-card {% if overview.mem_percent > 90 %}accent{% endif %}">
+  <div class="stat-card {% if overview.mem_percent > 90 %}tone-warn{% endif %}">
     <span class="stat-label">Arbeitsspeicher</span>
-    <span class="stat-value" style="font-size:1.15rem">{{ overview.mem_percent }}%</span>
+    <span class="stat-value u-stat-compact">{{ overview.mem_percent }}%</span>
     <span class="stat-hint">
       {% if overview.mem_total %}
         {{ format_bytes(overview.mem_used) }} / {{ format_bytes(overview.mem_total) }}
@@ -95,24 +94,24 @@
     </span>
     {% if overview.mem_total %}
     <div class="dashboard-meter" aria-hidden="true">
-      <div class="dashboard-meter-bar" style="width: {{ [overview.mem_percent, 100]|min }}%"></div>
+      <div class="dashboard-meter-bar" data-meter="{{ [overview.mem_percent, 100]|min }}"></div>
     </div>
     {% endif %}
   </div>
-  <div class="stat-card {% if overview.disk_percent > 85 %}accent{% endif %}">
+  <div class="stat-card {% if overview.disk_percent > 85 %}tone-warn{% endif %}">
     <span class="stat-label">Festplatte</span>
-    <span class="stat-value" style="font-size:1.15rem">{{ overview.disk_percent }}%</span>
+    <span class="stat-value u-stat-compact">{{ overview.disk_percent }}%</span>
     <span class="stat-hint">
       {{ format_bytes(overview.disk_used) }} / {{ format_bytes(overview.disk_total) }}
       {% if overview.disk_path %}<br><code>{{ overview.disk_path }}</code>{% endif %}
     </span>
     <div class="dashboard-meter" aria-hidden="true">
-      <div class="dashboard-meter-bar" style="width: {{ [overview.disk_percent, 100]|min }}%"></div>
+      <div class="dashboard-meter-bar" data-meter="{{ [overview.disk_percent, 100]|min }}"></div>
     </div>
   </div>
   {% set has_updates = overview.upgradable_count > 0 or (app_update and app_update.update_available) %}
   {% if has_updates %}
-  <a href="{{ url_for('system_updates') }}" class="stat-card stat-card-link accent" title="Zur Update-Seite">
+  <a href="{{ url_for('system_updates') }}" class="stat-card stat-card-link tone-warn" title="Zur Update-Seite">
     <span class="stat-label">Updates</span>
     <span class="stat-value">
       {% if overview.upgradable_count > 0 %}
@@ -140,7 +139,7 @@
     <span class="stat-hint">aktualisierbare Pakete</span>
   </div>
   {% endif %}
-  <div class="stat-card {% if overview.reboot_required %}accent{% endif %}">
+  <div class="stat-card {% if overview.reboot_required %}tone-warn{% endif %}">
     <span class="stat-label">Neustart</span>
     <span class="stat-value">
       {% if overview.reboot_required %}
@@ -168,7 +167,7 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Aktive SMB-Verbindungen</span>
+    <h2 class="card-title">Aktive SMB-Verbindungen</h2>
     {% if smb_status %}
     <span class="hint">
       {{ smb_status.session_count }} Sitzung{% if smb_status.session_count != 1 %}en{% endif %}
@@ -177,7 +176,7 @@
     {% endif %}
   </div>
   {% if smb_status_error %}
-  <p class="notice notice-warn" style="margin:1rem">{{ smb_status_error }}</p>
+  <p class="notice notice-warn u-m">{{ smb_status_error }}</p>
   {% elif smb_status and smb_status.connections %}
   <div class="table-wrap">
     <table>
@@ -217,7 +216,7 @@
 {% if smb_shares %}
 <div class="card">
   <div class="card-header">
-    <span class="card-title">SMB-Zugriff</span>
+    <h2 class="card-title">SMB-Zugriff</h2>
     <span class="hint">In Windows Explorer oder macOS „Mit Server verbinden“</span>
   </div>
   <ul class="dashboard-smb-list">
@@ -244,7 +243,7 @@
 {% if share_preview %}
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Freigaben (Auszug)</span>
+    <h2 class="card-title">Freigaben (Auszug)</h2>
     <a href="{{ url_for('shares_list') }}" class="btn btn-secondary btn-sm">Alle anzeigen</a>
   </div>
   <div class="table-wrap">
@@ -268,7 +267,7 @@
     </table>
   </div>
   {% if shares_count > share_preview|length %}
-  <p class="hint" style="padding:0.75rem 1rem 1rem">
+  <p class="hint u-inset-hint">
     {{ shares_count - share_preview|length }} weitere Freigabe(n) in der
     <a href="{{ url_for('shares_list') }}">vollständigen Liste</a>.
   </p>
@@ -282,57 +281,4 @@
   </div>
 </div>
 {% endif %}
-
-<div class="card">
-  <div class="card-header">
-    <span class="card-title">Schnellzugriff</span>
-    <div class="btn-group">
-      <a href="{{ url_for('shares_list') }}" class="btn btn-primary">Freigaben verwalten</a>
-      <a href="{{ url_for('share_new') }}" class="btn btn-secondary">+ Neue Freigabe</a>
-      <a href="{{ url_for('files_browser') }}" class="btn btn-secondary">Dateien</a>
-      <a href="{{ url_for('users_list') }}" class="btn btn-secondary">Benutzer</a>
-      <a href="{{ url_for('status_page') }}" class="btn btn-secondary">Status</a>
-      <a href="{{ url_for('system_updates') }}" class="btn btn-secondary">System-Updates</a>
-    </div>
-  </div>
-</div>
-
-<script>
-(function () {
-  function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text);
-    }
-    return new Promise(function (resolve, reject) {
-      var area = document.createElement('textarea');
-      area.value = text;
-      area.setAttribute('readonly', '');
-      area.style.position = 'fixed';
-      area.style.left = '-9999px';
-      document.body.appendChild(area);
-      area.select();
-      try {
-        document.execCommand('copy');
-        resolve();
-      } catch (err) {
-        reject(err);
-      } finally {
-        document.body.removeChild(area);
-      }
-    });
-  }
-
-  document.querySelectorAll('[data-copy]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var value = btn.getAttribute('data-copy') || '';
-      if (!value) return;
-      copyText(value).then(function () {
-        if (window.showToast) showToast('Pfad kopiert.', 'success');
-      }).catch(function () {
-        if (window.showToast) showToast('Kopieren fehlgeschlagen.', 'error');
-      });
-    });
-  });
-})();
-</script>
 {% endblock %}

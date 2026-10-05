@@ -3,14 +3,13 @@
 {% block page_heading %}Samba-Benutzer{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Zugriff</p>
   <h1>Benutzer verwalten</h1>
   <p class="lead">Linux-Systembenutzer und Samba-Passwort werden automatisch angelegt.</p>
 </div>
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">{{ users|length }} Benutzer</span>
+    <h2 class="card-title">{{ users|length }} Benutzer</h2>
     <a href="{{ url_for('user_new') }}" class="btn btn-primary">+ Benutzer anlegen</a>
   </div>
   {% if users %}
@@ -35,7 +34,7 @@
             <div class="btn-group">
               <a href="{{ url_for('user_password', username=user) }}" class="btn btn-secondary btn-sm">Passwort</a>
               <form class="inline-form" method="post" action="{{ url_for('user_delete', username=user) }}"
-                    data-confirm="Benutzer „{{ user }}“ wirklich löschen?"
+                    data-confirm="Benutzer „{{ user }}“ wirklich löschen? Das Samba-Konto wird entfernt."
                     data-confirm-title="Benutzer löschen"
                     data-confirm-danger>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

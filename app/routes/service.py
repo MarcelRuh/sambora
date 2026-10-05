@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Flask, flash, redirect, render_template, url_for
 
 from app.audit import audit_log
-from app.auth import login_required
+from app.auth import login_required, verify_admin_reauth
 from app.samba import SambaError, reload_samba, restart_samba, run_testparm, service_status
 
 
@@ -25,6 +25,9 @@ def register(app: Flask) -> None:
     @app.route("/service/reload", methods=["POST"])
     @login_required
     def service_reload():
+        if not verify_admin_reauth():
+            flash("Admin-Passwort erforderlich.", "error")
+            return redirect(url_for("status_page"))
         try:
             reload_samba()
             audit_log("service.reload")
@@ -36,6 +39,9 @@ def register(app: Flask) -> None:
     @app.route("/service/restart", methods=["POST"])
     @login_required
     def service_restart():
+        if not verify_admin_reauth():
+            flash("Admin-Passwort erforderlich.", "error")
+            return redirect(url_for("status_page"))
         try:
             restart_samba()
             audit_log("service.restart")

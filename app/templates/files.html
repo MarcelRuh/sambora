@@ -5,7 +5,7 @@
 {% block content %}
 {% if not shares %}
 <div class="card">
-  <p class="hint" style="margin:0">Keine aktiven Freigaben vorhanden. Zuerst eine <a href="{{ url_for('share_new') }}">Freigabe anlegen</a>.</p>
+  <p class="hint u-flush">Keine aktiven Freigaben vorhanden. Zuerst eine <a href="{{ url_for('share_new') }}">Freigabe anlegen</a>.</p>
 </div>
 {% else %}
 <div class="files-explorer card">
@@ -15,6 +15,7 @@
   </aside>
 
   <div class="files-main">
+    <h1 class="visually-hidden">Dateien</h1>
     <header class="files-header">
       <div class="files-header-nav">
         <button type="button" class="files-icon-btn" id="files-back-btn" title="Zurück" hidden aria-label="Zurück">
@@ -29,11 +30,11 @@
           <option value="size">Größe</option>
           <option value="mtime">Datum</option>
         </select>
-        <label class="files-icon-btn files-upload-btn" id="files-upload-label" title="Dateien hochladen">
+        <label class="files-icon-btn files-upload-btn" id="files-upload-label" title="Dateien hochladen" aria-label="Dateien hochladen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <input type="file" id="files-upload-input" multiple hidden>
         </label>
-        <label class="files-icon-btn files-upload-btn" id="files-upload-folder-label" title="Ordner hochladen">
+        <label class="files-icon-btn files-upload-btn" id="files-upload-folder-label" title="Ordner hochladen" aria-label="Ordner hochladen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           <input type="file" id="files-upload-folder-input" webkitdirectory multiple hidden>
         </label>
@@ -97,9 +98,7 @@
 {% endif %}
 
 {% if shares %}
-<script>
-  window.FILES_BOOT = { shares: {{ shares_boot | tojson }} };
-</script>
+<script type="application/json" id="files-boot">{{ {"shares": shares_boot}|tojson }}</script>
 <script src="{{ url_for('static', filename='js/files.js') }}"></script>
 {% endif %}
 {% endblock %}

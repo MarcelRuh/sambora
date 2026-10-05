@@ -5,6 +5,7 @@
   <div class="login-card">
     <div class="login-brand">
       <img class="login-logo" src="{{ url_for('static', filename='img/sambora-logo.jpg') }}" alt="Sambora">
+      <h1 class="login-title">Anmelden</h1>
     </div>
     {% if error %}
     <div class="notice notice-error" role="alert">
@@ -22,9 +23,9 @@
         <label for="password">Passwort</label>
         <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.5rem;padding:0.75rem">Anmelden</button>
+      <button type="submit" class="btn btn-primary u-login-submit">Anmelden</button>
     </form>
-    <p class="hint" style="text-align:center;margin-top:1.25rem">Nur für den internen Netzwerkbetrieb</p>
+    <p class="hint u-hint-center">Nur für den internen Netzwerkbetrieb</p>
   </div>
 </div>
 {% endblock %}

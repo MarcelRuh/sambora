@@ -3,13 +3,12 @@
 {% block page_heading %}Systemstatus{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Dienst</p>
   <h1>Dienst &amp; Konfiguration</h1>
   <p class="lead">Samba-Dienst steuern und Konfiguration prüfen.</p>
 </div>
 
 <div class="stats-grid">
-  <div class="stat-card {% if status.is_running %}accent{% endif %}">
+  <div class="stat-card {% if status.is_running %}tone-ok{% else %}tone-bad{% endif %}">
     <span class="stat-label">smbd</span>
     <span class="stat-value">
       {% if status.is_running %}
@@ -19,7 +18,7 @@
       {% endif %}
     </span>
   </div>
-  <div class="stat-card">
+  <div class="stat-card {% if config_check.success %}tone-ok{% else %}tone-bad{% endif %}">
     <span class="stat-label">Konfiguration</span>
     <span class="stat-value">
       {% if config_check.success %}
@@ -33,30 +32,36 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Samba-Dienst (smbd)</span>
+    <h2 class="card-title">Samba-Dienst (smbd)</h2>
     <div class="btn-group">
-      <form class="inline-form" method="post" action="{{ url_for('service_reload') }}">
+      <form class="inline-form" method="post" action="{{ url_for('service_reload') }}"
+            data-reauth data-reauth-title="Samba neu laden" data-loading>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="confirm_password" value="">
         <button type="submit" class="btn btn-secondary btn-sm">Neu laden</button>
       </form>
       <form class="inline-form" method="post" action="{{ url_for('service_restart') }}"
-            data-confirm="Samba wirklich neu starten?"
-            data-confirm-title="Samba neustarten"
-            data-confirm-danger>
+            data-confirm="Samba wird neu gestartet. Bestehende SMB-Verbindungen werden getrennt."
+            data-confirm-title="Samba neu starten"
+            data-confirm-danger
+            data-reauth data-reauth-title="Samba neu starten" data-loading>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="confirm_password" value="">
         <button type="submit" class="btn btn-danger btn-sm">Neustart</button>
       </form>
-      <a href="{{ url_for('config_check_page') }}" class="btn btn-secondary btn-sm">Konfiguration prüfen</a>
-      <a href="{{ url_for('audit_log_page') }}" class="btn btn-secondary btn-sm">Protokoll</a>
-      <a href="{{ url_for('backups_page') }}" class="btn btn-secondary btn-sm">Backups</a>
     </div>
+  </div>
+  <div class="btn-group status-links">
+    <a href="{{ url_for('config_check_page') }}" class="btn btn-ghost btn-sm">Konfiguration prüfen</a>
+    <a href="{{ url_for('audit_log_page') }}" class="btn btn-ghost btn-sm">Protokoll</a>
+    <a href="{{ url_for('backups_page') }}" class="btn btn-ghost btn-sm">Backups</a>
   </div>
   <pre class="output">{{ status.output or 'Keine Ausgabe.' }}</pre>
 </div>
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Konfigurationsprüfung (Kurz)</span>
+    <h2 class="card-title">Konfigurationsprüfung (Kurz)</h2>
     {% if config_check.success %}
       <span class="badge ok">OK</span>
     {% else %}

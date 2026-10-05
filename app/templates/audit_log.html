@@ -3,14 +3,13 @@
 {% block page_heading %}Audit-Protokoll{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Protokoll</p>
   <h1>Admin-Protokoll</h1>
   <p class="lead">Letzte Aktionen in der Web-UI (max. 500 Einträge).</p>
 </div>
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">{{ entries|length }} Einträge</span>
+    <h2 class="card-title">{{ entries|length }} Einträge</h2>
     <a href="{{ url_for('backups_page') }}" class="btn btn-secondary btn-sm">Konfigurations-Backups</a>
   </div>
   {% if entries %}

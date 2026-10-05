@@ -3,7 +3,6 @@
 {% block page_heading %}{% if editing %}Freigabe bearbeiten{% else %}Neue Freigabe{% endif %}{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Freigaben</p>
   <h1>{% if editing %}Freigabe bearbeiten{% else %}Neue Freigabe{% endif %}</h1>
   <p class="lead">Pfad muss unter <code>{{ config.shares_base_path }}</code> liegen.</p>
 </div>
@@ -29,6 +28,7 @@
     <div class="form-group">
       <label for="path">Pfad auf dem Server</label>
       <input type="text" id="path" name="path" value="{{ share.path }}" required
+             {% if not editing %}data-focus-end{% endif %}
              placeholder="{{ config.shares_base_path }}/media">
       {% if not editing %}
       <p class="hint">Basis-Pfad ist vorausgefüllt – nur noch den Unterordner ergänzen, z. B. <code>media</code>.</p>
@@ -80,7 +80,7 @@
       </div>
       <p class="hint">Dropdown öffnen und Benutzer anhaken. Mehrere möglich. Bei Gast-Zugriff nicht erforderlich.</p>
       {% else %}
-      <div class="empty-state" style="padding:1rem 0">
+      <div class="empty-state u-empty-compact">
         <p>Keine Samba-Benutzer vorhanden.</p>
         <a href="{{ url_for('user_new') }}" class="btn btn-secondary btn-sm">Benutzer anlegen</a>
       </div>
@@ -106,112 +106,12 @@
       </label>
     </div>
 
-    <div class="btn-group" style="margin-top:1.25rem">
+    <div class="btn-group u-mt-lg">
       <button type="submit" class="btn btn-primary">Speichern</button>
       <a href="{{ url_for('shares_list') }}" class="btn btn-secondary">Abbrechen</a>
     </div>
   </form>
 </div>
 
-<script>
-(function () {
-  const path = document.getElementById('path');
-  {% if not editing %}
-  if (path) {
-    path.focus();
-    const len = path.value.length;
-    path.setSelectionRange(len, len);
-  }
-  {% endif %}
-
-  const guest = document.getElementById('guest_ok');
-  const section = document.getElementById('users-section');
-  const dropdown = document.getElementById('user-dropdown');
-  const trigger = document.getElementById('user-dropdown-trigger');
-  const panel = document.getElementById('user-dropdown-panel');
-  const summary = document.getElementById('user-dropdown-summary');
-  const chips = document.getElementById('user-selected-chips');
-  const picker = document.getElementById('user-picker');
-
-  function selectedUsers() {
-    if (!picker) return [];
-    return Array.from(picker.querySelectorAll('input[type=checkbox]:checked')).map(function (cb) {
-      return cb.value;
-    });
-  }
-
-  function updateUserDisplay() {
-    if (!summary || !chips) return;
-    const users = selectedUsers();
-    if (users.length === 0) {
-      summary.textContent = 'Benutzer auswählen …';
-    } else if (users.length === 1) {
-      summary.textContent = users[0];
-    } else {
-      summary.textContent = users.length + ' Benutzer ausgewählt';
-    }
-    chips.innerHTML = '';
-    users.forEach(function (name) {
-      const chip = document.createElement('span');
-      chip.className = 'user-chip';
-      chip.textContent = name;
-      chips.appendChild(chip);
-    });
-  }
-
-  function closeDropdown() {
-    if (!panel || !trigger) return;
-    panel.hidden = true;
-    trigger.setAttribute('aria-expanded', 'false');
-    dropdown && dropdown.classList.remove('is-open');
-  }
-
-  function openDropdown() {
-    if (!panel || !trigger || section.classList.contains('user-section-disabled')) return;
-    panel.hidden = false;
-    trigger.setAttribute('aria-expanded', 'true');
-    dropdown && dropdown.classList.add('is-open');
-  }
-
-  function toggleDropdown() {
-    if (!panel || panel.hidden) openDropdown();
-    else closeDropdown();
-  }
-
-  if (trigger && panel) {
-    trigger.addEventListener('click', function (e) {
-      e.preventDefault();
-      toggleDropdown();
-    });
-    document.addEventListener('click', function (e) {
-      if (!dropdown || !dropdown.contains(e.target)) closeDropdown();
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeDropdown();
-    });
-  }
-
-  if (picker) {
-    picker.addEventListener('change', updateUserDisplay);
-    updateUserDisplay();
-  }
-
-  if (!guest || !section) return;
-
-  function syncUsers() {
-    const on = guest.checked;
-    section.classList.toggle('user-section-disabled', on);
-    if (picker) {
-      picker.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
-        cb.disabled = on;
-        if (on) cb.checked = false;
-      });
-    }
-    if (on) closeDropdown();
-    updateUserDisplay();
-  }
-  guest.addEventListener('change', syncUsers);
-  syncUsers();
-})();
-</script>
+<script src="{{ url_for('static', filename='js/share-form.js') }}"></script>
 {% endblock %}

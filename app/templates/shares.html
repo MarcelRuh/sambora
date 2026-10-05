@@ -3,14 +3,13 @@
 {% block page_heading %}SMB-Freigaben{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Freigaben</p>
   <h1>Freigaben verwalten</h1>
   <p class="lead">SMB-Shares auf diesem Server – Basis: <code>{{ config.shares_base_path }}</code></p>
 </div>
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Aktionen</span>
+    <h2 class="card-title">Aktionen</h2>
     <div class="btn-group">
       <a href="{{ url_for('share_new') }}" class="btn btn-primary">+ Neue Freigabe</a>
       <a href="{{ url_for('share_import') }}" class="btn btn-secondary">Aus smb.conf importieren</a>
@@ -21,7 +20,7 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Alle Freigaben</span>
+    <h2 class="card-title">Alle Freigaben</h2>
   </div>
   {% if shares %}
   <div class="table-wrap">
@@ -49,7 +48,7 @@
             {% else %}
               <span class="hint">{{ share.valid_users|join(', ') }}</span>
             {% endif %}
-            <span class="badge {% if share.read_only %}ro{% else %}rw{% endif %}" style="margin-left:0.35rem">
+            <span class="badge {% if share.read_only %}ro{% else %}rw{% endif %} u-ml">
               {{ 'Nur Lesen' if share.read_only else 'Lesen/Schreiben' }}
             </span>
           </td>
@@ -63,10 +62,13 @@
           <td class="actions-cell">
             <div class="btn-group">
               <a href="{{ url_for('share_edit', share_name=share.name) }}" class="btn btn-secondary btn-sm">Bearbeiten</a>
-              <form class="inline-form" method="post" action="{{ url_for('share_toggle', share_name=share.name) }}" data-loading>
+              <form class="inline-form" method="post" action="{{ url_for('share_toggle', share_name=share.name) }}"
+                    data-loading
+                    data-confirm="Freigabe „{{ share.name }}“ {{ 'deaktivieren' if share.enabled else 'aktivieren' }}? Bestehende Verbindungen können kurz unterbrochen werden."
+                    data-confirm-title="Freigabe {{ 'deaktivieren' if share.enabled else 'aktivieren' }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-secondary btn-sm">
-                  {{ 'Aus' if share.enabled else 'An' }}
+                  {{ 'Deaktivieren' if share.enabled else 'Aktivieren' }}
                 </button>
               </form>
               <a href="{{ url_for('share_delete', share_name=share.name) }}" class="btn btn-danger btn-sm">Löschen</a>

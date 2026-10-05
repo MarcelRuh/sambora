@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from flask import Flask, render_template, request
+import os
+
+from flask import Flask, jsonify, render_template, request
 
 from app.auth import configure_session, enforce_password_change, is_authenticated, password_change_required
 from app.config import DEFAULT_MAX_UPLOAD_BYTES, ConfigError, load_config
@@ -41,7 +43,7 @@ def create_app() -> Flask:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'"
+            "default-src 'self'; style-src 'self'; script-src 'self'"
         )
         try:
             cfg = load_config()
@@ -78,6 +80,11 @@ def create_app() -> Flask:
         }
 
     register_routes(app)
+
+    @app.get("/health")
+    def health():
+        from app.samba import PRIV_SOCKET
+        return jsonify({"ok": True, "priv_socket": os.path.exists(PRIV_SOCKET)})
 
     @app.errorhandler(403)
     def forbidden(_exc):

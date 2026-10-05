@@ -3,7 +3,6 @@
 {% block page_heading %}Freigaben importieren{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Freigaben</p>
   <h1>Aus smb.conf importieren</h1>
   <p class="lead">
     Bestehende Freigaben aus <code>/etc/samba/smb.conf</code> nach
@@ -28,10 +27,10 @@
 {% if importable %}
 <div class="card">
   <div class="card-header">
-    <span class="card-title">Importierbare Freigaben</span>
+    <h2 class="card-title">Importierbare Freigaben</h2>
     <span class="badge warn">{{ importable|length }}</span>
   </div>
-  <p class="hint" style="margin-bottom:1rem">
+  <p class="hint u-mb">
     Basisverzeichnis: <code>{{ shares_base }}</code>.
     Liegen alle ausgewählten Pfade unter einem gemeinsamen Ordner (nicht <code>/</code>),
     wird die Basis beim Import angepasst. Freigaben auf verschiedenen Wurzeln
@@ -44,7 +43,7 @@
       <table>
         <thead>
           <tr>
-            <th style="width:2.5rem"></th>
+            <th class="u-col-check"></th>
             <th>Name</th>
             <th>Pfad</th>
             <th>Status</th>
@@ -75,7 +74,7 @@
       </table>
     </div>
 
-    <label class="checkbox-row" style="display:flex;align-items:center;gap:0.5rem;margin:1rem 0">
+    <label class="checkbox-row u-row-gap">
       <input type="checkbox" name="comment_out_source" checked>
       <span>Importierte Abschnitte in <code>smb.conf</code> auskommentieren (empfohlen, vermeidet Duplikate)</span>
     </label>
@@ -88,11 +87,11 @@
 </div>
 {% elif not list_error %}
 <div class="card">
-  <p class="hint" style="margin:0">
+  <p class="hint u-flush">
     Keine importierbaren Freigaben gefunden – entweder sind alle bereits in
     <code>smb-shares.conf</code> oder <code>smb.conf</code> enthält keine Freigaben mit <code>path</code>.
   </p>
-  <div class="btn-group" style="margin-top:1rem">
+  <div class="btn-group u-mt-md">
     <a href="{{ url_for('shares_list') }}" class="btn btn-secondary">Zurück</a>
   </div>
 </div>

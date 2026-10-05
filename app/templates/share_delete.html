@@ -3,14 +3,13 @@
 {% block page_heading %}Freigabe löschen{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Freigaben</p>
   <h1>Freigabe „{{ share.name }}“ löschen</h1>
   <p class="lead">Die SMB-Freigabe wird aus der Samba-Konfiguration entfernt.</p>
 </div>
 
-<div class="card" style="border-color:rgba(244,63,94,0.3)">
+<div class="card card-danger">
   <div class="card-header">
-    <span class="card-title">Bestätigung</span>
+    <h2 class="card-title">Bestätigung</h2>
   </div>
 
   <dl class="delete-details">
@@ -25,6 +24,7 @@
   </dl>
 
   <form method="post" action="{{ url_for('share_delete', share_name=share.name) }}"
+        data-delete-path="{{ share.path }}"
         data-confirm="Freigabe „{{ share.name }}“ wirklich löschen?"
         data-confirm-title="Freigabe löschen"
         data-confirm-danger>
@@ -34,7 +34,7 @@
         <input type="checkbox" id="delete_files" name="delete_files">
         <span>
           <strong>Ordner und Dateien ebenfalls löschen</strong><br>
-          <span class="hint" style="margin-top:0.25rem;display:block">
+          <span class="hint u-hint-block">
             Löscht dauerhaft <code>{{ share.path }}</code> inklusive aller Inhalte.
             Diese Aktion kann nicht rückgängig gemacht werden.
           </span>
@@ -42,7 +42,7 @@
       </label>
     </div>
 
-    <p class="hint" style="margin:1rem 0">
+    <p class="hint u-my-md">
       Ohne Häkchen wird nur die Freigabe entfernt – die Daten bleiben auf dem Server.
     </p>
 

@@ -17,6 +17,21 @@
     done: 100,
   };
 
+  function readBoot() {
+    var el = document.getElementById('updates-boot');
+    if (!el) return;
+    try {
+      var data = JSON.parse(el.textContent);
+      Object.keys(data).forEach(function (key) {
+        window[key] = data[key];
+      });
+    } catch (err) {
+      /* Boot-Daten fehlen */
+    }
+  }
+
+  readBoot();
+
   function ui() {
     return window.Sambora || window.SambaUI;
   }
@@ -112,7 +127,7 @@
     }
 
     return ui().confirm(
-      'Das System wird neu gestartet. Offene Verbindungen werden getrennt. Fortfahren?',
+      'Das System wird neu gestartet. Offene Verbindungen werden getrennt und die Web-Oberfläche ist danach kurz nicht erreichbar. Fortfahren?',
       { title: 'Neustart bestätigen', danger: true, okLabel: 'Neustart' }
     ).then(function (ok) {
       if (!ok) return false;
@@ -215,7 +230,7 @@
       buttonId: 'btn-apt-upgrade',
       buttonIdleText: 'Updates installieren',
       confirmTitle: 'Updates installieren',
-      confirmText: 'Updates installieren? Bei erforderlichem Neustart wirst du zur Bestätigung aufgefordert.',
+      confirmText: 'Es werden apt update, apt upgrade -y und apt autoremove ausgeführt. Bei erforderlichem Neustart wirst du zur Bestätigung aufgefordert.',
       danger: true,
       onSuccess: function (data) {
         if (data.reboot_pending) {

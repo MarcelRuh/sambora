@@ -1,9 +1,20 @@
 (function () {
   'use strict';
 
-  if (!window.FILES_BOOT || !window.FILES_BOOT.shares) return;
+  function readBoot() {
+    var el = document.getElementById('files-boot');
+    if (!el) return null;
+    try {
+      return JSON.parse(el.textContent);
+    } catch (err) {
+      return null;
+    }
+  }
 
-  var shares = window.FILES_BOOT.shares;
+  var boot = readBoot();
+  if (!boot || !boot.shares) return;
+
+  var shares = boot.shares;
   var shareList = document.getElementById('files-share-list');
   var breadcrumb = document.getElementById('files-breadcrumb');
   var backBtn = document.getElementById('files-back-btn');
@@ -356,8 +367,11 @@
 
   function confirmDelete(entryName, entryType, rel) {
     var label = entryType === 'dir' ? 'Ordner' : 'Datei';
+    var detail = entryType === 'dir'
+      ? ' Der Ordner und sein gesamter Inhalt werden dauerhaft gelöscht.'
+      : ' Die Datei wird dauerhaft gelöscht.';
     ui().confirm(
-      '"' + entryName + '" wirklich löschen?',
+      '"' + entryName + '" wirklich löschen?' + detail,
       { title: label + ' löschen', okLabel: 'Löschen', danger: true }
     ).then(function (ok) {
       if (!ok) return;
@@ -418,6 +432,8 @@
       var item = document.createElement('div');
       item.className = 'files-grid-item' + (entry.type === 'dir' ? ' is-dir' : ' is-file');
       item.tabIndex = 0;
+      item.setAttribute('role', 'button');
+      item.setAttribute('aria-label', entry.name);
 
       var preview = document.createElement('div');
       preview.className = 'files-grid-preview';
@@ -449,7 +465,10 @@
 
       item.addEventListener('dblclick', function () { openEntry(entry, data); });
       item.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') openEntry(entry, data);
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openEntry(entry, data);
+        }
       });
       item.addEventListener('click', function (e) {
         if (e.target.closest('.files-item-actions')) return;

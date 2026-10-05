@@ -7,6 +7,41 @@
   var modalOk = null;
   var modalCancel = null;
   var modalResolve = null;
+  var lastFocus = null;
+
+  function focusableInModal() {
+    return Array.prototype.filter.call(
+      modalEl.querySelectorAll('button, [href], input, select, textarea'),
+      function (el) {
+        return !el.disabled && !el.hidden;
+      }
+    );
+  }
+
+  function onModalKeydown(e) {
+    if (!modalEl || modalEl.hidden) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeModal(false);
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    var nodes = focusableInModal();
+    if (!nodes.length) {
+      e.preventDefault();
+      return;
+    }
+    var first = nodes[0];
+    var last = nodes[nodes.length - 1];
+    var active = document.activeElement;
+    if (e.shiftKey && (active === first || !modalEl.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !modalEl.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
 
   function initModal() {
     modalEl = document.getElementById('ui-modal');
@@ -25,11 +60,7 @@
     modalEl.querySelector('.ui-modal-backdrop').addEventListener('click', function () {
       closeModal(false);
     });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && modalEl && !modalEl.hidden) {
-        closeModal(false);
-      }
-    });
+    document.addEventListener('keydown', onModalKeydown);
   }
 
   function openModal(message, options) {
@@ -42,6 +73,7 @@
     modalCancel.textContent = options.cancelLabel || 'Abbrechen';
     modalOk.className = 'btn ' + (options.danger ? 'btn-danger' : 'btn-primary');
 
+    lastFocus = document.activeElement;
     modalEl.hidden = false;
     modalEl.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
@@ -73,6 +105,7 @@
     modalCancel.textContent = options.cancelLabel || 'Abbrechen';
     modalOk.className = 'btn btn-primary';
 
+    lastFocus = document.activeElement;
     modalEl.hidden = false;
     modalEl.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
@@ -96,9 +129,22 @@
     modalEl.hidden = true;
     modalEl.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
-    if (modalResolve) {
-      modalResolve(!!result);
-      modalResolve = null;
+    var restore = lastFocus;
+    lastFocus = null;
+    var resolve = modalResolve;
+    modalResolve = null;
+    if (resolve) resolve(!!result);
+    if (modalEl.hidden && restore && typeof restore.focus === 'function') {
+      restore.focus();
+    }
+  }
+
+  function finishConfirmedSubmit(form) {
+    form.dataset.confirmed = '1';
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit();
+    } else {
+      form.submit();
     }
   }
 
@@ -110,18 +156,40 @@
           return;
         }
         e.preventDefault();
+        e.stopImmediatePropagation();
         var message = form.getAttribute('data-confirm') || 'Fortfahren?';
+        var files = form.querySelector('input[name="delete_files"]');
+        if (files && files.checked) {
+          var path = form.getAttribute('data-delete-path') || '';
+          message += ' Der Ordner' + (path ? ' ' + path : '') +
+            ' und alle Dateien werden dauerhaft gelöscht. Das kann nicht rückgängig gemacht werden.';
+        }
         var title = form.getAttribute('data-confirm-title') || 'Bestätigen';
         var danger = form.hasAttribute('data-confirm-danger');
         openModal(message, { title: title, danger: danger }).then(function (ok) {
-          if (ok) {
-            form.dataset.confirmed = '1';
-            if (typeof form.requestSubmit === 'function') {
-              form.requestSubmit();
-            } else {
-              form.submit();
-            }
+          if (!ok) return;
+          if (form.hasAttribute('data-reauth')) {
+            var api = window.Sambora || window.SambaUI;
+            if (!api || !api.promptPassword) return;
+            api.promptPassword({
+              title: form.getAttribute('data-reauth-title') || 'Passwort bestätigen',
+              okLabel: 'Bestätigen',
+            }).then(function (password) {
+              if (!password) return;
+              var input = form.querySelector('input[name="confirm_password"]');
+              if (!input) {
+                input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'confirm_password';
+                form.appendChild(input);
+              }
+              input.value = password;
+              form.dataset.reauthDone = '1';
+              finishConfirmedSubmit(form);
+            });
+            return;
           }
+          finishConfirmedSubmit(form);
         });
       });
     });
@@ -175,10 +243,8 @@
 
   function bindFormLoading() {
     document.querySelectorAll('form[data-loading]').forEach(function (form) {
-      form.addEventListener('submit', function () {
-        if (form.hasAttribute('data-reauth') && form.dataset.reauthDone !== '1') {
-          return;
-        }
+      form.addEventListener('submit', function (e) {
+        if (e.defaultPrevented) return;
         var btn = form.querySelector('button[type="submit"]');
         if (!btn || btn.disabled) return;
         btn.disabled = true;
@@ -287,12 +353,24 @@
 
   window.showToast = showToast;
 
+  function bindMeters() {
+    document.querySelectorAll('[data-meter]').forEach(function (el) {
+      var value = Number(el.getAttribute('data-meter'));
+      if (!isFinite(value)) return;
+      el.style.width = Math.max(0, Math.min(100, value)) + '%';
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initModal();
+    bindMeters();
+    document.querySelectorAll('.nav-item.active').forEach(function (el) {
+      el.setAttribute('aria-current', 'page');
+    });
     bindConfirmForms();
+    bindReauthForms();
     bindToastDismiss();
     bindFormLoading();
-    bindReauthForms();
     bindSidebar();
   });
 })();

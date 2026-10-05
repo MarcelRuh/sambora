@@ -14,11 +14,6 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-<div class="ui-atmosphere" aria-hidden="true">
-  <div class="ui-orb" style="top:-8%;left:-6%;width:420px;height:420px;background:radial-gradient(circle,color-mix(in srgb,var(--brand-pink) 55%,transparent),transparent 70%)"></div>
-  <div class="ui-orb" style="bottom:-12%;right:-8%;width:480px;height:480px;background:radial-gradient(circle,color-mix(in srgb,var(--brand-cyan) 40%,transparent),transparent 70%);animation-delay:-4s"></div>
-  <div class="ui-orb" style="top:38%;right:18%;width:280px;height:280px;background:radial-gradient(circle,color-mix(in srgb,var(--brand-purple) 35%,transparent),transparent 70%);animation-delay:-7s"></div>
-</div>
 
 {% if session.get('authenticated') %}
 <div class="app-shell">
@@ -79,16 +74,13 @@
             {% endif %}
           </span>
           {% if app_update and app_update.update_available %}
-            <span class="sidebar-update-link" style="margin:0">Update</span>
+            <span class="sidebar-update-link u-flush">Update</span>
           {% else %}
             <span>GitHub</span>
           {% endif %}
         </div>
-        <div class="dashboard-meter" aria-hidden="true" style="margin-top:0.5rem">
-          <div class="dashboard-meter-bar" style="width:{% if app_update and app_update.update_available %}12%{% else %}100%{% endif %}"></div>
-        </div>
       </a>
-      <p class="sidebar-user">{{ session.get('username', 'admin') }} · admin</p>
+      <p class="sidebar-user">{{ session.get('username', 'admin') }}</p>
       <form method="post" action="{{ url_for('logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="sidebar-logout">
@@ -107,7 +99,7 @@
         <a href="{{ url_for('index') }}" class="topbar-logo" title="Sambora">
           {% include '_brand_mark.html' %}
         </a>
-        <div class="topbar-title brand-word">{% block page_heading %}SAMBORA{% endblock %}</div>
+        <div class="topbar-title">{% block page_heading %}Sambora{% endblock %}</div>
       </div>
       <div class="topbar-meta">{{ public_url.rstrip('/') }}</div>
       <form method="post" action="{{ url_for('logout') }}" class="topbar-logout">
@@ -155,5 +147,6 @@
   </div>
 </div>
 <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/copy.js') }}"></script>
 </body>
 </html>

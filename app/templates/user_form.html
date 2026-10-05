@@ -3,7 +3,6 @@
 {% block page_heading %}{% if editing %}Passwort: {{ username }}{% else %}Benutzer anlegen{% endif %}{% endblock %}
 {% block content %}
 <div class="page-header">
-  <p class="ui-kicker">Zugriff</p>
   <h1>{% if editing %}Samba-Passwort ändern{% else %}Neuer Samba-Benutzer{% endif %}</h1>
   {% if not editing %}
   <p class="lead">Legt Linux-Systembenutzer und Samba-Konto automatisch an.</p>
@@ -35,7 +34,7 @@
       <p class="hint">Mindestens 8 Zeichen.</p>
     </div>
 
-    <div class="btn-group" style="margin-top:1rem">
+    <div class="btn-group u-mt-md">
       <button type="submit" class="btn btn-primary">Speichern</button>
       <a href="{{ url_for('users_list') }}" class="btn btn-secondary">Abbrechen</a>
     </div>
