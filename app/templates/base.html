@@ -28,7 +28,7 @@
         </span>
       </a>
     </div>
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" aria-label="Hauptnavigation">
       {% if not force_password_change %}
       <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -46,9 +46,17 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Dateien
       </a>
-      <a href="{{ url_for('status_page') }}" class="nav-item {% if request.endpoint in ('status_page', 'config_check_page', 'audit_log_page', 'backups_page') %}active{% endif %}">
+      <a href="{{ url_for('status_page') }}" class="nav-item {% if request.endpoint in ('status_page', 'config_check_page') %}active{% endif %}">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         Status
+      </a>
+      <a href="{{ url_for('audit_log_page') }}" class="nav-item {% if request.endpoint == 'audit_log_page' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+        Protokoll
+      </a>
+      <a href="{{ url_for('backups_page') }}" class="nav-item {% if request.endpoint == 'backups_page' %}active{% endif %}">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Backups
       </a>
       <a href="{{ url_for('system_updates') }}" class="nav-item {% if request.endpoint == 'system_updates' %}active{% endif %}">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -60,7 +68,7 @@
       {% endif %}
       <a href="{{ url_for('change_password') }}" class="nav-item {% if request.endpoint == 'change_password' %}active{% endif %}">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        Passwort
+        Admin-Passwort
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -76,7 +84,7 @@
           {% if app_update and app_update.update_available %}
             <span class="sidebar-update-link u-flush">Update</span>
           {% else %}
-            <span>GitHub</span>
+            <span>Version</span>
           {% endif %}
         </div>
       </a>

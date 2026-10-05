@@ -3,7 +3,7 @@
 {% block page_heading %}Dashboard{% endblock %}
 {% block content %}
 <div class="page-header">
-  <h1>Übersicht</h1>
+  <h1>Dashboard</h1>
   <p class="lead">Status von Samba und System – Basis: <code>{{ config.shares_base_path }}</code></p>
 </div>
 
@@ -33,7 +33,7 @@
         <span class="badge off">{{ status.active }}</span>
       {% endif %}
     </span>
-    <span class="stat-hint">smbd Status</span>
+    <span class="stat-hint">Dienststatus</span>
   </div>
   <a href="{{ url_for('status_page') }}" class="stat-card stat-card-link {% if config_ok %}tone-ok{% elif config_ok is sameas false %}tone-bad{% endif %}" title="Konfiguration &amp; Dienst">
     <span class="stat-label">Konfiguration</span>
@@ -46,7 +46,7 @@
         <span class="badge neutral">—</span>
       {% endif %}
     </span>
-    <span class="stat-hint">testparm · Klicken für Details</span>
+    <span class="stat-hint">Prüfung · Klicken für Details</span>
   </a>
   <a href="{{ url_for('shares_list') }}" class="stat-card stat-card-link" title="Freigaben verwalten">
     <span class="stat-label">Freigaben</span>
@@ -55,7 +55,7 @@
       {% if shares_count %}
         {{ shares_active }} aktiv{% if shares_disabled %} · {{ shares_disabled }} deaktiviert{% endif %}
       {% else %}
-        noch keine Shares angelegt
+        noch keine Freigaben angelegt
       {% endif %}
     </span>
   </a>

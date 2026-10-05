@@ -15,9 +15,9 @@
   </aside>
 
   <div class="files-main">
-    <h1 class="visually-hidden">Dateien</h1>
     <header class="files-header">
       <div class="files-header-nav">
+        <h1 class="files-page-title">Dateien</h1>
         <button type="button" class="files-icon-btn" id="files-back-btn" title="Zurück" hidden aria-label="Zurück">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
@@ -32,10 +32,12 @@
         </select>
         <label class="files-icon-btn files-upload-btn" id="files-upload-label" title="Dateien hochladen" aria-label="Dateien hochladen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="files-toolbar-label">Dateien</span>
           <input type="file" id="files-upload-input" multiple hidden>
         </label>
         <label class="files-icon-btn files-upload-btn" id="files-upload-folder-label" title="Ordner hochladen" aria-label="Ordner hochladen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          <span class="files-toolbar-label">Ordner</span>
           <input type="file" id="files-upload-folder-input" webkitdirectory multiple hidden>
         </label>
         <button type="button" class="files-icon-btn" id="files-mkdir-btn" title="Neuer Ordner" aria-label="Neuer Ordner">

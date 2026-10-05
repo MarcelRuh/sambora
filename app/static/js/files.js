@@ -375,12 +375,15 @@
       { title: label + ' löschen', okLabel: 'Löschen', danger: true }
     ).then(function (ok) {
       if (!ok) return;
-      apiPost('/api/files/delete', { share: currentShare, path: rel })
-        .then(function () {
-          showToast('Gelöscht.', 'success');
-          loadBrowse(currentPath);
-        })
-        .catch(showApiError);
+      ui().promptPassword({ title: label + ' löschen', okLabel: 'Löschen' }).then(function (password) {
+        if (!password) return;
+        apiPost('/api/files/delete', { share: currentShare, path: rel, password: password })
+          .then(function () {
+            showToast('Gelöscht.', 'success');
+            loadBrowse(currentPath);
+          })
+          .catch(showApiError);
+      });
     });
   }
 

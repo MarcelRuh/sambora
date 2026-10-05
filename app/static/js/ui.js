@@ -77,7 +77,8 @@
     modalEl.hidden = false;
     modalEl.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
-    modalOk.focus();
+    if (options.danger) modalCancel.focus();
+    else modalOk.focus();
 
     return new Promise(function (resolve) {
       modalResolve = resolve;
@@ -166,14 +167,24 @@
         }
         var title = form.getAttribute('data-confirm-title') || 'Bestätigen';
         var danger = form.hasAttribute('data-confirm-danger');
-        openModal(message, { title: title, danger: danger }).then(function (ok) {
+        var okLabel = form.getAttribute('data-confirm-ok') || 'Bestätigen';
+        if (files && files.checked && form.getAttribute('data-confirm-ok-files')) {
+          okLabel = form.getAttribute('data-confirm-ok-files');
+        }
+        openModal(message, { title: title, danger: danger, okLabel: okLabel }).then(function (ok) {
           if (!ok) return;
-          if (form.hasAttribute('data-reauth')) {
+          var gateName = form.getAttribute('data-reauth-when');
+          var needsReauth = form.hasAttribute('data-reauth');
+          if (gateName) {
+            var gate = form.querySelector('[name="' + gateName + '"]');
+            needsReauth = !!(gate && gate.checked);
+          }
+          if (needsReauth) {
             var api = window.Sambora || window.SambaUI;
             if (!api || !api.promptPassword) return;
             api.promptPassword({
               title: form.getAttribute('data-reauth-title') || 'Passwort bestätigen',
-              okLabel: 'Bestätigen',
+              okLabel: form.getAttribute('data-reauth-ok') || 'Bestätigen',
             }).then(function (password) {
               if (!password) return;
               var input = form.querySelector('input[name="confirm_password"]');
@@ -303,6 +314,11 @@
           delete form.dataset.reauthDone;
           return;
         }
+        var gateName = form.getAttribute('data-reauth-when');
+        if (gateName) {
+          var gate = form.querySelector('[name="' + gateName + '"]');
+          if (!gate || !gate.checked) return;
+        }
         e.preventDefault();
         var api = window.Sambora || window.SambaUI;
         if (!api || !api.promptPassword) {
@@ -310,7 +326,7 @@
         }
         api.promptPassword({
           title: form.getAttribute('data-reauth-title') || 'Passwort bestätigen',
-          okLabel: 'Bestätigen',
+          okLabel: form.getAttribute('data-reauth-ok') || 'Bestätigen',
         }).then(function (password) {
           if (!password) return;
           var input = form.querySelector('input[name="confirm_password"]');
@@ -361,12 +377,28 @@
     });
   }
 
+  function bindDestructiveLabels() {
+    document.querySelectorAll('form[data-confirm-ok-files]').forEach(function (form) {
+      var box = form.querySelector('[name="delete_files"]');
+      var button = form.querySelector('[type="submit"]');
+      var plain = form.getAttribute('data-confirm-ok');
+      var irreversible = form.getAttribute('data-confirm-ok-files');
+      if (!box || !button || !plain || !irreversible) return;
+      function sync() {
+        button.textContent = box.checked ? irreversible : plain;
+      }
+      box.addEventListener('change', sync);
+      sync();
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initModal();
     bindMeters();
     document.querySelectorAll('.nav-item.active').forEach(function (el) {
       el.setAttribute('aria-current', 'page');
     });
+    bindDestructiveLabels();
     bindConfirmForms();
     bindReauthForms();
     bindToastDismiss();

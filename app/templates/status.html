@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Status – {{ app_name }}{% endblock %}
-{% block page_heading %}Systemstatus{% endblock %}
+{% block page_heading %}Status{% endblock %}
 {% block content %}
 <div class="page-header">
-  <h1>Dienst &amp; Konfiguration</h1>
+  <h1>Status</h1>
   <p class="lead">Samba-Dienst steuern und Konfiguration prüfen.</p>
 </div>
 
 <div class="stats-grid">
   <div class="stat-card {% if status.is_running %}tone-ok{% else %}tone-bad{% endif %}">
-    <span class="stat-label">smbd</span>
+    <span class="stat-label">Samba-Dienst</span>
     <span class="stat-value">
       {% if status.is_running %}
         <span class="badge ok">Läuft</span>
@@ -35,7 +35,7 @@
     <h2 class="card-title">Samba-Dienst (smbd)</h2>
     <div class="btn-group">
       <form class="inline-form" method="post" action="{{ url_for('service_reload') }}"
-            data-reauth data-reauth-title="Samba neu laden" data-loading>
+            data-reauth data-reauth-title="Samba neu laden" data-reauth-ok="Neu laden" data-loading>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="confirm_password" value="">
         <button type="submit" class="btn btn-secondary btn-sm">Neu laden</button>
@@ -44,7 +44,8 @@
             data-confirm="Samba wird neu gestartet. Bestehende SMB-Verbindungen werden getrennt."
             data-confirm-title="Samba neu starten"
             data-confirm-danger
-            data-reauth data-reauth-title="Samba neu starten" data-loading>
+            data-confirm-ok="Samba neu starten"
+            data-reauth data-reauth-title="Samba neu starten" data-reauth-ok="Neu starten" data-loading>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="confirm_password" value="">
         <button type="submit" class="btn btn-danger btn-sm">Neustart</button>

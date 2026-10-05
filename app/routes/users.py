@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Flask, flash, redirect, render_template, request, url_for
 
 from app.audit import audit_log
-from app.auth import login_required
+from app.auth import login_required, verify_admin_reauth
 from app.samba import (
     SambaError,
     add_samba_user,
@@ -68,6 +68,9 @@ def register(app: Flask) -> None:
     @app.route("/users/<username>/delete", methods=["POST"])
     @login_required
     def user_delete(username: str):
+        if not verify_admin_reauth():
+            flash("Admin-Passwort erforderlich.", "error")
+            return redirect(url_for("users_list"))
         try:
             username = validate_samba_username(username)
             delete_samba_user(username)

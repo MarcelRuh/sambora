@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Backups – {{ app_name }}{% endblock %}
-{% block page_heading %}Konfigurations-Backups{% endblock %}
+{% block page_heading %}Backups{% endblock %}
 {% block content %}
 <div class="page-header">
-  <h1>Samba-Konfiguration wiederherstellen</h1>
+  <h1>Backups</h1>
   <p class="lead">Automatische Backups von <code>smb-shares.conf</code> und <code>smb.conf</code> (max. 20 Versionen).</p>
 </div>
 
@@ -49,8 +49,13 @@
             <form class="inline-form" method="post" action="{{ url_for('backups_page') }}"
                   data-confirm="Backup „{{ backup.name }}“ wirklich wiederherstellen? Die aktuelle Konfiguration wird vorher gesichert."
                   data-confirm-title="Backup wiederherstellen"
-                  data-confirm-danger>
+                  data-confirm-danger
+                  data-confirm-ok="Wiederherstellen"
+                  data-reauth
+                  data-reauth-title="Backup wiederherstellen"
+                  data-reauth-ok="Wiederherstellen">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="confirm_password" value="">
               <input type="hidden" name="backup_name" value="{{ backup.name }}">
               <button type="submit" class="btn btn-danger btn-sm">Wiederherstellen</button>
             </form>

@@ -5,7 +5,7 @@ from __future__ import annotations
 from flask import Flask, flash, redirect, render_template, request, url_for
 
 from app.audit import audit_log
-from app.auth import login_required
+from app.auth import login_required, verify_admin_reauth
 from app.config import load_config
 from app.network import resolve_access_host
 from app.samba import (
@@ -116,6 +116,9 @@ def register(app: Flask) -> None:
                 return render_template("share_delete.html", share=share)
 
             delete_files = request.form.get("delete_files") == "on"
+            if delete_files and not verify_admin_reauth():
+                flash("Admin-Passwort erforderlich.", "error")
+                return render_template("share_delete.html", share=share, delete_files=True)
             share_path = share.path
             shares = [s for s in shares if not share_names_equal(s.name, share_name)]
             write_shares(shares, config["samba_shares_file"], config["shares_base_path"])
@@ -195,6 +198,9 @@ def register(app: Flask) -> None:
             share = get_share_by_name(shares, share_name)
             if not share:
                 flash("Freigabe nicht gefunden.", "error")
+                return redirect(url_for("shares_list"))
+            if not verify_admin_reauth():
+                flash("Admin-Passwort erforderlich.", "error")
                 return redirect(url_for("shares_list"))
             share.enabled = not share.enabled
             write_shares(shares, config["samba_shares_file"], config["shares_base_path"])

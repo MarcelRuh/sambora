@@ -1,27 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Freigaben – {{ app_name }}{% endblock %}
-{% block page_heading %}SMB-Freigaben{% endblock %}
+{% block page_heading %}Freigaben{% endblock %}
 {% block content %}
 <div class="page-header">
-  <h1>Freigaben verwalten</h1>
+  <h1>Freigaben</h1>
   <p class="lead">SMB-Shares auf diesem Server – Basis: <code>{{ config.shares_base_path }}</code></p>
-</div>
-
-<div class="card">
-  <div class="card-header">
-    <h2 class="card-title">Aktionen</h2>
-    <div class="btn-group">
-      <a href="{{ url_for('share_new') }}" class="btn btn-primary">+ Neue Freigabe</a>
-      <a href="{{ url_for('share_import') }}" class="btn btn-secondary">Aus smb.conf importieren</a>
-      <a href="{{ url_for('config_check_page') }}" class="btn btn-secondary">Konfiguration prüfen</a>
-    </div>
+  <div class="btn-group u-mt">
+    <a href="{{ url_for('share_new') }}" class="btn btn-primary">Neue Freigabe</a>
+    <a href="{{ url_for('share_import') }}" class="btn btn-secondary">Aus smb.conf importieren</a>
+    <a href="{{ url_for('config_check_page') }}" class="btn btn-secondary">Konfiguration prüfen</a>
   </div>
 </div>
 
 <div class="card">
-  <div class="card-header">
-    <h2 class="card-title">Alle Freigaben</h2>
-  </div>
   {% if shares %}
   <div class="table-wrap">
     <table>
@@ -65,13 +56,18 @@
               <form class="inline-form" method="post" action="{{ url_for('share_toggle', share_name=share.name) }}"
                     data-loading
                     data-confirm="Freigabe „{{ share.name }}“ {{ 'deaktivieren' if share.enabled else 'aktivieren' }}? Bestehende Verbindungen können kurz unterbrochen werden."
-                    data-confirm-title="Freigabe {{ 'deaktivieren' if share.enabled else 'aktivieren' }}">
+                    data-confirm-title="Freigabe {{ 'deaktivieren' if share.enabled else 'aktivieren' }}"
+                    data-confirm-ok="{{ 'Deaktivieren' if share.enabled else 'Aktivieren' }}"
+                    data-reauth
+                    data-reauth-title="Freigabe {{ 'deaktivieren' if share.enabled else 'aktivieren' }}"
+                    data-reauth-ok="{{ 'Deaktivieren' if share.enabled else 'Aktivieren' }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="confirm_password" value="">
                 <button type="submit" class="btn btn-secondary btn-sm">
                   {{ 'Deaktivieren' if share.enabled else 'Aktivieren' }}
                 </button>
               </form>
-              <a href="{{ url_for('share_delete', share_name=share.name) }}" class="btn btn-danger btn-sm">Löschen</a>
+              <a href="{{ url_for('share_delete', share_name=share.name) }}" class="btn btn-ghost btn-sm btn-quiet-danger">Löschen</a>
             </div>
           </td>
         </tr>

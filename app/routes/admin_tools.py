@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from flask import Flask, flash, redirect, render_template, request, url_for
 
 from app.audit import ACTION_LABELS, audit_log, read_audit_log
-from app.auth import login_required
+from app.auth import login_required, verify_admin_reauth
 from app.backups import BackupError, list_config_backups, restore_config_backup
 
 
@@ -47,7 +47,9 @@ def register(app: Flask) -> None:
 
         if request.method == "POST":
             name = (request.form.get("backup_name") or "").strip()
-            if not name:
+            if not verify_admin_reauth():
+                flash("Admin-Passwort erforderlich.", "error")
+            elif not name:
                 flash("Kein Backup ausgewählt.", "error")
             else:
                 try:

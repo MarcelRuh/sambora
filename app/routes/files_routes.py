@@ -8,7 +8,7 @@ import secrets
 from flask import Flask, Response, after_this_request, flash, jsonify, render_template, request, send_file
 
 from app.audit import audit_log
-from app.auth import login_required
+from app.auth import login_required, reauth_failure_response, verify_admin_reauth
 from app.config import load_config
 from app.files import (
     FileBrowserError,
@@ -175,6 +175,8 @@ def register(app: Flask) -> None:
     @app.route("/api/files/delete", methods=["POST"])
     @login_required
     def files_api_delete():
+        if not verify_admin_reauth():
+            return reauth_failure_response()
         data = request.get_json(silent=True) or {}
         try:
             delete_path(str(data.get("share", "")), str(data.get("path", "")))

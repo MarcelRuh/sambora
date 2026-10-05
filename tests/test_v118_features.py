@@ -8,6 +8,7 @@ import pytest
 
 from app.audit import ACTION_LABELS, audit_log, read_audit_log
 from app.backups import BackupError, list_config_backups, restore_config_backup
+from app.csrf import CSRF_SESSION_KEY
 from app.files import FileBrowserError, validate_folder_download_manifest
 from tests.test_auth_security import _login_post
 
@@ -132,6 +133,39 @@ def test_backups_page_lists_backups(client, monkeypatch):
     res = client.get("/backups")
     assert res.status_code == 200
     assert b"smb-shares.conf.test.bak" in res.data
+
+
+def test_backup_restore_requires_admin_password(client, monkeypatch):
+    restored: list[str] = []
+    monkeypatch.setattr("app.routes.admin_tools.list_config_backups", lambda: [])
+    monkeypatch.setattr(
+        "app.routes.admin_tools.restore_config_backup",
+        lambda name: restored.append(name) or "wiederhergestellt",
+    )
+    _login_post(client)
+    client.get("/backups")
+    with client.session_transaction() as sess:
+        token = sess[CSRF_SESSION_KEY]
+
+    res = client.post(
+        "/backups",
+        data={"csrf_token": token, "backup_name": "smb-shares.conf.test.bak"},
+        follow_redirects=False,
+    )
+    assert res.status_code == 200
+    assert restored == []
+
+    res = client.post(
+        "/backups",
+        data={
+            "csrf_token": token,
+            "backup_name": "smb-shares.conf.test.bak",
+            "confirm_password": "testpass123",
+        },
+        follow_redirects=False,
+    )
+    assert res.status_code == 302
+    assert restored == ["smb-shares.conf.test.bak"]
 
 
 def test_download_manifest_calls_validation(monkeypatch):
