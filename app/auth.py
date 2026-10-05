@@ -49,6 +49,7 @@ def configure_session(app: Flask) -> None:
         except Exception:
             pass
         app.config["SESSION_COOKIE_SECURE"] = secure
+        app.config["SESSION_COOKIE_SAMESITE"] = "None" if secure and os.environ.get("SAMBORA_EMBED") == "1" else "Strict"
 
 
 def login_user(username: str) -> None:

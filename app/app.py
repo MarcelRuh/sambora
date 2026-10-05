@@ -15,6 +15,18 @@ from app.tls import is_tls_enabled, public_url
 from app.routes import register_routes
 
 
+def frame_ancestors() -> str | None:
+    """Origins allowed to embed Sambora. Empty means framing stays denied."""
+    if os.environ.get("SAMBORA_EMBED") != "1":
+        return None
+    origins: list[str] = []
+    for part in os.environ.get("SAMBORA_FRAME_ANCESTORS", "").split(","):
+        item = part.strip().rstrip("/")
+        if item.startswith(("http://", "https://")) and " " not in item:
+            origins.append(item)
+    return " ".join(dict.fromkeys(origins)) or None
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     try:
@@ -39,12 +51,16 @@ def create_app() -> Flask:
 
     @app.after_request
     def _security_headers(response):
-        response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; style-src 'self'; script-src 'self'"
-        )
+        ancestors = frame_ancestors()
+        policy = "default-src 'self'; style-src 'self'; script-src 'self'"
+        if ancestors:
+            response.headers.pop("X-Frame-Options", None)
+            policy = f"{policy}; frame-ancestors {ancestors}"
+        else:
+            response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Content-Security-Policy"] = policy
         try:
             cfg = load_config()
             if request.is_secure and is_tls_enabled(cfg):
