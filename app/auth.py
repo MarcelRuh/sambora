@@ -125,15 +125,46 @@ def read_reauth_password() -> str:
     )
 
 
+def _reauth_limit_key() -> str:
+    user = str(session.get("username") or "admin")
+    return f"{request.remote_addr or 'unknown'}:{user}"
+
+
 def verify_admin_reauth(password: str | None = None) -> bool:
+    from app.rate_limit import (
+        LoginRateLimited,
+        check_reauth_allowed,
+        clear_reauth_failures,
+        record_reauth_failure,
+    )
+
+    key = _reauth_limit_key()
+    try:
+        check_reauth_allowed(key)
+    except LoginRateLimited:
+        return False
     secret = read_reauth_password() if password is None else password
     if not secret:
         return False
     config = load_config()
-    return verify_password(secret, config["admin_password_hash"])
+    ok = verify_password(secret, config["admin_password_hash"])
+    if ok:
+        clear_reauth_failures(key)
+    else:
+        record_reauth_failure(key)
+    return ok
 
 
 def reauth_failure_response():
+    from app.rate_limit import LoginRateLimited, check_reauth_allowed
+
+    try:
+        check_reauth_allowed(_reauth_limit_key())
+    except LoginRateLimited as exc:
+        return jsonify({
+            "ok": False,
+            "error": f"Zu viele Fehlversuche. Bitte in {exc.retry_after} Sekunden erneut versuchen.",
+        }), 429
     return jsonify({"ok": False, "error": "Admin-Passwort erforderlich."}), 403
 
 
@@ -155,6 +186,8 @@ def login_required(view: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(view)
     def wrapped(*args: Any, **kwargs: Any) -> Any:
         if not is_authenticated():
+            if request.path.startswith("/api/") or request.is_json:
+                return jsonify({"ok": False, "error": "Anmeldung erforderlich."}), 401
             return redirect(url_for("login", next=request.path))
         return view(*args, **kwargs)
 

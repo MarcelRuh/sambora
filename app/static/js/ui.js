@@ -58,9 +58,17 @@
       closeModal(true);
     });
     modalEl.querySelector('.ui-modal-backdrop').addEventListener('click', function () {
+      if (modalEl.dataset.danger === '1') return;
       closeModal(false);
     });
     document.addEventListener('keydown', onModalKeydown);
+  }
+
+  function setBackgroundInert(active) {
+    var shell = document.querySelector('.app-shell') || document.querySelector('main');
+    if (!shell) return;
+    if (active) shell.setAttribute('inert', '');
+    else shell.removeAttribute('inert');
   }
 
   function openModal(message, options) {
@@ -72,11 +80,15 @@
     modalOk.textContent = options.okLabel || 'Bestätigen';
     modalCancel.textContent = options.cancelLabel || 'Abbrechen';
     modalOk.className = 'btn ' + (options.danger ? 'btn-danger' : 'btn-primary');
+    modalEl.dataset.danger = options.danger ? '1' : '0';
+    var dialog = modalEl.querySelector('.ui-modal-dialog');
+    if (dialog) dialog.setAttribute('role', options.danger ? 'alertdialog' : 'dialog');
 
     lastFocus = document.activeElement;
     modalEl.hidden = false;
     modalEl.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
+    setBackgroundInert(true);
     if (options.danger) modalCancel.focus();
     else modalOk.focus();
 
@@ -105,11 +117,15 @@
     modalOk.textContent = options.okLabel || 'Bestätigen';
     modalCancel.textContent = options.cancelLabel || 'Abbrechen';
     modalOk.className = 'btn btn-primary';
+    modalEl.dataset.danger = '0';
+    var dialog = modalEl.querySelector('.ui-modal-dialog');
+    if (dialog) dialog.setAttribute('role', 'dialog');
 
     lastFocus = document.activeElement;
     modalEl.hidden = false;
     modalEl.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
+    setBackgroundInert(true);
 
     return new Promise(function (resolve) {
       modalResolve = function (ok) {
@@ -130,6 +146,8 @@
     modalEl.hidden = true;
     modalEl.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
+    setBackgroundInert(false);
+    delete modalEl.dataset.danger;
     var restore = lastFocus;
     lastFocus = null;
     var resolve = modalResolve;
@@ -245,7 +263,9 @@
       backdrop.addEventListener('click', function () { setOpen(false); });
     }
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key !== 'Escape') return;
+      if (modalEl && !modalEl.hidden) return;
+      setOpen(false);
     });
     document.querySelectorAll('.sidebar-nav a').forEach(function (link) {
       link.addEventListener('click', function () { setOpen(false); });
@@ -394,7 +414,8 @@
   function bindPasswordMatch() {
     document.querySelectorAll('form[data-password-match]').forEach(function (form) {
       var primary = form.querySelector('[name="' + (form.getAttribute('data-password-match') || 'new_password') + '"]');
-      var confirm = form.querySelector('[name="confirm_password"]');
+      var confirmName = form.getAttribute('data-password-confirm') || 'confirm_password';
+      var confirm = form.querySelector('[name="' + confirmName + '"]');
       var hint = form.querySelector('[data-password-match-hint]');
       if (!primary || !confirm) return;
       function sync() {

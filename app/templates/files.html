@@ -58,17 +58,17 @@
       <span>Ordner werden als <strong>ZIP</strong> heruntergeladen.</span>
     </div>
 
-    <div id="files-upload-progress" class="files-transfer-progress" hidden>
+    <div id="files-upload-progress" class="files-transfer-progress" hidden role="status" aria-live="polite">
       <div class="files-transfer-progress-track">
-        <div class="files-transfer-progress-bar" id="files-upload-progress-bar"></div>
+        <div class="files-transfer-progress-bar" id="files-upload-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
       </div>
       <span class="hint" id="files-upload-progress-text"></span>
     </div>
 
-    <div id="files-download-progress" class="files-transfer-progress files-download-progress" hidden>
+    <div id="files-download-progress" class="files-transfer-progress files-download-progress" hidden role="status" aria-live="polite">
       <div class="files-transfer-progress-row">
         <div class="files-transfer-progress-track">
-          <div class="files-transfer-progress-bar files-download-progress-bar" id="files-download-progress-bar"></div>
+          <div class="files-transfer-progress-bar files-download-progress-bar" id="files-download-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
         </div>
         <button type="button" class="files-transfer-cancel" id="files-download-cancel-btn" title="Abbrechen" aria-label="Download abbrechen">×</button>
       </div>

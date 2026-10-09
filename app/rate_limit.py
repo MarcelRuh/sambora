@@ -114,3 +114,72 @@ def clear_login_failures(ip: str) -> None:
         return None
 
     _with_store(mutate)
+
+
+def reauth_attempts_path() -> Path:
+    return app_config.CONFIG_PATH.parent / "reauth_attempts.json"
+
+
+def _with_reauth_store(mutator):
+    path = reauth_attempts_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+", encoding="utf-8") as fh:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
+        store = _load_locked(fh)
+        result = mutator(store)
+        _write_locked(fh, store)
+        return result
+
+
+def check_reauth_allowed(key: str) -> None:
+    now = time.time()
+    store_key = key or "unknown"
+
+    def mutate(store: dict[str, Any]):
+        entry = store.get(store_key) or {}
+        locked_until = float(entry.get("locked_until") or 0)
+        if locked_until > now:
+            raise LoginRateLimited(int(locked_until - now))
+        if locked_until and locked_until <= now:
+            store.pop(store_key, None)
+        return None
+
+    _with_reauth_store(mutate)
+
+
+def record_reauth_failure(key: str) -> None:
+    now = time.time()
+    store_key = key or "unknown"
+
+    def mutate(store: dict[str, Any]):
+        entry = store.get(store_key) or {}
+        locked_until = float(entry.get("locked_until") or 0)
+        if locked_until > now:
+            return None
+        first = float(entry.get("first") or now)
+        failures = int(entry.get("failures") or 0)
+        if now - first > WINDOW_SECONDS:
+            first = now
+            failures = 0
+        failures += 1
+        updated = {"first": first, "failures": failures, "locked_until": 0}
+        if failures >= MAX_FAILURES:
+            updated["locked_until"] = now + LOCKOUT_SECONDS
+        store[store_key] = updated
+        return None
+
+    _with_reauth_store(mutate)
+
+
+def clear_reauth_failures(key: str) -> None:
+    store_key = key or "unknown"
+
+    def mutate(store: dict[str, Any]):
+        store.pop(store_key, None)
+        return None
+
+    _with_reauth_store(mutate)

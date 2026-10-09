@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-header">
   <h1>Freigaben</h1>
-  <p class="lead">SMB-Shares auf diesem Server – Basis: <code>{{ config.shares_base_path }}</code></p>
+  <p class="lead">SMB-Freigaben auf diesem Server – Basis: <code>{{ config.shares_base_path }}</code></p>
   <div class="btn-group u-mt">
     <a href="{{ url_for('share_new') }}" class="btn btn-primary">Neue Freigabe</a>
     <a href="{{ url_for('share_import') }}" class="btn btn-secondary">Aus smb.conf importieren</a>

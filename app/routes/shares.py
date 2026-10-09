@@ -49,6 +49,8 @@ def register(app: Flask) -> None:
         samba_users = load_samba_users_for_form()
         if request.method == "POST":
             try:
+                if not verify_admin_reauth():
+                    raise ValidationError("Admin-Passwort erforderlich.")
                 share = share_from_form(request.form)
                 shares = read_shares(config["samba_shares_file"])
                 if get_share_by_name(shares, share.name):
@@ -84,6 +86,8 @@ def register(app: Flask) -> None:
         samba_users = load_samba_users_for_form()
         if request.method == "POST":
             try:
+                if not verify_admin_reauth():
+                    raise ValidationError("Admin-Passwort erforderlich.")
                 updated = share_from_form(request.form)
                 new_name = updated.name
                 if not share_names_equal(new_name, share_name) and get_share_by_name(shares, new_name):
@@ -116,9 +120,9 @@ def register(app: Flask) -> None:
                 return render_template("share_delete.html", share=share)
 
             delete_files = request.form.get("delete_files") == "on"
-            if delete_files and not verify_admin_reauth():
+            if not verify_admin_reauth():
                 flash("Admin-Passwort erforderlich.", "error")
-                return render_template("share_delete.html", share=share, delete_files=True)
+                return render_template("share_delete.html", share=share, delete_files=delete_files)
             share_path = share.path
             shares = [s for s in shares if not share_names_equal(s.name, share_name)]
             write_shares(shares, config["samba_shares_file"], config["shares_base_path"])
@@ -169,6 +173,8 @@ def register(app: Flask) -> None:
             selected = request.form.getlist("share_names")
             comment_out = request.form.get("comment_out_source") == "on"
             try:
+                if not verify_admin_reauth():
+                    raise ValidationError("Admin-Passwort erforderlich.")
                 if not selected:
                     raise ValidationError("Bitte mindestens eine Freigabe auswählen.")
                 import_shares(selected, comment_out_source=comment_out)

@@ -59,12 +59,16 @@ def create_app() -> Flask:
         ):
             response.headers["Cache-Control"] = "no-store"
         ancestors = frame_ancestors()
-        policy = "default-src 'self'; style-src 'self'; script-src 'self'"
+        policy = (
+            "default-src 'self'; style-src 'self'; script-src 'self'; "
+            "base-uri 'self'; object-src 'none'"
+        )
         if ancestors:
             response.headers.pop("X-Frame-Options", None)
             policy = f"{policy}; frame-ancestors {ancestors}"
         else:
             response.headers["X-Frame-Options"] = "DENY"
+            policy = f"{policy}; frame-ancestors 'none'"
         response.headers["Content-Security-Policy"] = policy
         try:
             cfg = load_config()
@@ -104,8 +108,7 @@ def create_app() -> Flask:
 
     @app.get("/health")
     def health():
-        from app.samba import PRIV_SOCKET
-        return jsonify({"ok": True, "priv_socket": os.path.exists(PRIV_SOCKET)})
+        return jsonify({"ok": True})
 
     @app.errorhandler(403)
     def forbidden(_exc):

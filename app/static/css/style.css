@@ -1527,7 +1527,7 @@ pre.output {
 }
 
 .files-share-item.active {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ui-nav-active-bg);
   color: var(--text);
 }
 

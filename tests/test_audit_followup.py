@@ -17,16 +17,21 @@ def test_health_is_public(client):
     res = client.get("/health")
     assert res.status_code == 200
     body = res.get_json()
-    assert body == {"ok": True, "priv_socket": body["priv_socket"]}
-    assert isinstance(body["priv_socket"], bool)
+    assert body == {"ok": True}
     assert b"password" not in res.data
     assert b"secret" not in res.data
+    assert b"priv_socket" not in res.data
 
 
 def test_csp_blocks_inline_scripts(client):
     res = client.get("/login")
     csp = res.headers["Content-Security-Policy"]
-    assert csp == "default-src 'self'; style-src 'self'; script-src 'self'"
+    assert "default-src 'self'" in csp
+    assert "style-src 'self'" in csp
+    assert "script-src 'self'" in csp
+    assert "base-uri 'self'" in csp
+    assert "object-src 'none'" in csp
+    assert "frame-ancestors 'none'" in csp
     assert res.headers.get("Cache-Control") == "no-store"
     assert "camera=()" in res.headers.get("Permissions-Policy", "")
     assert b"<script>" not in res.data

@@ -26,6 +26,7 @@
   var uploadInput = document.getElementById('files-upload-input');
   var uploadFolderInput = document.getElementById('files-upload-folder-input');
   var uploadLabel = document.getElementById('files-upload-label');
+  var uploadFolderLabel = document.getElementById('files-upload-folder-label');
   var mkdirBtn = document.getElementById('files-mkdir-btn');
   var refreshBtn = document.getElementById('files-refresh-btn');
   var viewToggle = document.getElementById('files-view-toggle');
@@ -116,6 +117,8 @@
     var disabled = readOnly;
     uploadLabel.classList.toggle('disabled', disabled);
     uploadInput.disabled = disabled;
+    if (uploadFolderLabel) uploadFolderLabel.classList.toggle('disabled', disabled);
+    if (uploadFolderInput) uploadFolderInput.disabled = disabled;
     mkdirBtn.disabled = disabled;
   }
 
@@ -169,7 +172,9 @@
     }
     dlProgressEl.removeAttribute('hidden');
     if (dlProgressBar) {
-      dlProgressBar.style.width = Math.max(0, Math.min(100, pct || 0)) + '%';
+      var value = Math.max(0, Math.min(100, pct || 0));
+      dlProgressBar.style.width = value + '%';
+      dlProgressBar.setAttribute('aria-valuenow', String(Math.round(value)));
     }
     if (dlProgressText) dlProgressText.textContent = text || '';
     downloadBusy = true;
@@ -250,7 +255,10 @@
     shares.forEach(function (share) {
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'files-share-item' + (share.name === currentShare ? ' active' : '');
+      var active = share.name === currentShare;
+      btn.className = 'files-share-item' + (active ? ' active' : '');
+      if (active) btn.setAttribute('aria-current', 'true');
+      else btn.removeAttribute('aria-current');
       var icon = document.createElement('span');
       icon.className = 'files-share-icon';
       icon.setAttribute('aria-hidden', 'true');
@@ -294,6 +302,7 @@
     home.className = 'files-crumb files-crumb-home';
     home.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>';
     home.title = currentShare;
+    home.setAttribute('aria-label', 'Zur Freigabe-Wurzel (' + currentShare + ')');
     home.addEventListener('click', function () { loadBrowse(''); });
     breadcrumb.appendChild(home);
 
@@ -396,7 +405,8 @@
     dl.type = 'button';
     dl.className = 'files-action-btn';
     dl.title = entry.type === 'dir' ? 'Ordner herunterladen' : 'Herunterladen';
-    dl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+    dl.setAttribute('aria-label', dl.title);
+    dl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
     dl.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -409,7 +419,8 @@
       del.type = 'button';
       del.className = 'files-action-btn files-action-danger';
       del.title = 'Löschen';
-      del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
+      del.setAttribute('aria-label', 'Löschen');
+      del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
       del.addEventListener('click', function (e) {
         e.stopPropagation();
         confirmDelete(entry.name, entry.type, rel);
@@ -665,6 +676,7 @@
         if (e.lengthComputable) {
           var pct = Math.round((e.loaded / e.total) * 100);
           progressBar.style.width = pct + '%';
+          progressBar.setAttribute('aria-valuenow', String(pct));
           progressText.textContent =
             'Upload ' + (index + 1) + '/' + total + ': ' + fileName + ' (' + pct + '%)';
         } else {

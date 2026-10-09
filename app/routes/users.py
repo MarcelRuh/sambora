@@ -18,7 +18,7 @@ from app.validators import ValidationError, validate_password, validate_samba_us
 
 def _matched_password(form) -> str:
     password = validate_password(form.get("password") or "")
-    confirm = form.get("confirm_password") or ""
+    confirm = form.get("password_confirm") or ""
     if password != confirm:
         raise ValidationError("Passwörter stimmen nicht überein.")
     return password
@@ -42,6 +42,8 @@ def register(app: Flask) -> None:
         username = ""
         if request.method == "POST":
             try:
+                if not verify_admin_reauth():
+                    raise ValidationError("Admin-Passwort erforderlich.")
                 username = validate_samba_username(request.form.get("username") or "")
                 password = _matched_password(request.form)
                 add_samba_user(username, password)
@@ -64,6 +66,8 @@ def register(app: Flask) -> None:
         error = None
         if request.method == "POST":
             try:
+                if not verify_admin_reauth():
+                    raise ValidationError("Admin-Passwort erforderlich.")
                 password = _matched_password(request.form)
                 set_samba_password(username, password)
                 audit_log("user.password", username)

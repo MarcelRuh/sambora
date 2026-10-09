@@ -15,14 +15,18 @@
 {% endif %}
 
 <div class="card form-card">
-  <form method="post" id="share-form">
+  <form method="post" id="share-form"
+        data-reauth
+        data-reauth-title="{% if editing %}Freigabe speichern{% else %}Freigabe anlegen{% endif %}"
+        data-reauth-ok="Speichern">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="confirm_password" value="">
     <div class="form-group">
       <label for="name">Freigabename</label>
       <input type="text" id="name" name="name" value="{{ share.name }}" required
              pattern="[a-zA-Z0-9_\- ]+" title="Buchstaben, Zahlen, Leerzeichen, _ und -"
              placeholder="Media">
-      <p class="hint">SMB-Share-Name im Netzwerk, z. B. „Media“ oder „Backup NAS“</p>
+      <p class="hint">Name der SMB-Freigabe im Netzwerk, z. B. „Media“ oder „Backup NAS“</p>
     </div>
 
     <div class="form-group">
@@ -40,7 +44,7 @@
     <div class="form-group">
       <label for="comment">Beschreibung</label>
       <input type="text" id="comment" name="comment" value="{{ share.comment }}" maxlength="256"
-             placeholder="Optional">
+             placeholder="optional">
     </div>
 
     <div class="form-group" id="users-section">

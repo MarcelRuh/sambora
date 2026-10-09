@@ -44,6 +44,23 @@ def test_share_create_persists(client, app_config, monkeypatch):
         },
         follow_redirects=False,
     )
+    assert res.status_code == 200
+    assert "shares" not in saved
+
+    res = client.post(
+        "/shares/new",
+        data={
+            "csrf_token": _token(client),
+            "name": "media",
+            "path": str(base / "media"),
+            "comment": "Filme",
+            "valid_users": ["alice"],
+            "browseable": "on",
+            "enabled": "on",
+            "confirm_password": "testpass123",
+        },
+        follow_redirects=False,
+    )
     assert res.status_code == 302
     assert res.headers["Location"].endswith("/shares")
     assert saved["shares"][0].name == "media"
@@ -67,7 +84,21 @@ def test_user_create_and_delete(client, monkeypatch):
             "csrf_token": _token(client),
             "username": "alice",
             "password": "secretpass",
-            "confirm_password": "secretpass",
+            "password_confirm": "secretpass",
+        },
+        follow_redirects=False,
+    )
+    assert res.status_code == 200
+    assert created == {}
+
+    res = client.post(
+        "/users/new",
+        data={
+            "csrf_token": _token(client),
+            "username": "alice",
+            "password": "secretpass",
+            "password_confirm": "secretpass",
+            "confirm_password": "testpass123",
         },
         follow_redirects=False,
     )
@@ -180,7 +211,8 @@ def test_user_create_rejects_password_mismatch(client, monkeypatch):
             "csrf_token": _token(client),
             "username": "alice",
             "password": "secretpass",
-            "confirm_password": "otherpass1",
+            "password_confirm": "otherpass1",
+            "confirm_password": "testpass123",
         },
         follow_redirects=False,
     )
@@ -243,6 +275,39 @@ def test_share_delete_files_requires_admin_password(client, monkeypatch):
     assert res.status_code == 302
     assert written["shares"] == []
     assert deleted_dirs == ["/srv/shares/media"]
+
+
+def test_share_delete_without_files_requires_admin_password(client, monkeypatch):
+    share = Share(name="media", path="/srv/shares/media")
+    written: dict = {}
+    monkeypatch.setattr("app.routes.shares.read_shares", lambda *_a, **_k: [share])
+    monkeypatch.setattr("app.routes.shares.get_share_by_name", lambda *_a, **_k: share)
+    monkeypatch.setattr(
+        "app.routes.shares.write_shares",
+        lambda shares, *_a, **_k: written.update(shares=list(shares)),
+    )
+    monkeypatch.setattr(
+        "app.routes.shares.delete_share_directory",
+        lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("should not delete files")),
+    )
+
+    _login_post(client)
+    client.get("/shares/media/delete")
+    res = client.post(
+        "/shares/media/delete",
+        data={"csrf_token": _token(client)},
+        follow_redirects=False,
+    )
+    assert res.status_code == 200
+    assert "shares" not in written
+
+    res = client.post(
+        "/shares/media/delete",
+        data={"csrf_token": _token(client), "confirm_password": "testpass123"},
+        follow_redirects=False,
+    )
+    assert res.status_code == 302
+    assert written["shares"] == []
 
 
 def test_share_toggle_requires_admin_password(client, monkeypatch):

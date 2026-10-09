@@ -69,7 +69,8 @@ def test_system_reboot_priv_error(client, monkeypatch):
 
 def test_files_browse_requires_login(client):
     res = client.get("/api/files/browse?share=data&path=")
-    assert res.status_code == 302
+    assert res.status_code == 401
+    assert res.get_json()["ok"] is False
 
 
 def test_files_browse_returns_json(client, monkeypatch):

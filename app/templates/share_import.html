@@ -37,8 +37,12 @@
     müssen getrennt importiert werden.
   </p>
 
-  <form method="post" action="{{ url_for('share_import') }}">
+  <form method="post" action="{{ url_for('share_import') }}"
+        data-reauth
+        data-reauth-title="Freigaben importieren"
+        data-reauth-ok="Importieren">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="confirm_password" value="">
     <div class="table-wrap">
       <table>
         <thead>
