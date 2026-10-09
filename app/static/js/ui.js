@@ -69,7 +69,7 @@
 
     modalTitle.textContent = options.title || 'Bestätigen';
     modalBody.textContent = message;
-    modalOk.textContent = options.okLabel || 'OK';
+    modalOk.textContent = options.okLabel || 'Bestätigen';
     modalCancel.textContent = options.cancelLabel || 'Abbrechen';
     modalOk.className = 'btn ' + (options.danger ? 'btn-danger' : 'btn-primary');
 
@@ -102,7 +102,7 @@
     label.appendChild(input);
     modalBody.appendChild(label);
 
-    modalOk.textContent = options.okLabel || 'OK';
+    modalOk.textContent = options.okLabel || 'Bestätigen';
     modalCancel.textContent = options.cancelLabel || 'Abbrechen';
     modalOk.className = 'btn btn-primary';
 
@@ -377,6 +377,36 @@
     });
   }
 
+  function bindPasswordReveal() {
+    document.querySelectorAll('[data-password-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var targetId = btn.getAttribute('data-password-toggle');
+        var input = targetId ? document.getElementById(targetId) : null;
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+        btn.textContent = show ? 'Verbergen' : 'Anzeigen';
+      });
+    });
+  }
+
+  function bindPasswordMatch() {
+    document.querySelectorAll('form[data-password-match]').forEach(function (form) {
+      var primary = form.querySelector('[name="' + (form.getAttribute('data-password-match') || 'new_password') + '"]');
+      var confirm = form.querySelector('[name="confirm_password"]');
+      var hint = form.querySelector('[data-password-match-hint]');
+      if (!primary || !confirm) return;
+      function sync() {
+        var mismatch = confirm.value && primary.value !== confirm.value;
+        confirm.setCustomValidity(mismatch ? 'Passwörter stimmen nicht überein.' : '');
+        if (hint) hint.hidden = !mismatch;
+      }
+      primary.addEventListener('input', sync);
+      confirm.addEventListener('input', sync);
+    });
+  }
+
   function bindDestructiveLabels() {
     document.querySelectorAll('form[data-confirm-ok-files]').forEach(function (form) {
       var box = form.querySelector('[name="delete_files"]');
@@ -398,6 +428,8 @@
     document.querySelectorAll('.nav-item.active').forEach(function (el) {
       el.setAttribute('aria-current', 'page');
     });
+    bindPasswordReveal();
+    bindPasswordMatch();
     bindDestructiveLabels();
     bindConfirmForms();
     bindReauthForms();

@@ -32,7 +32,7 @@
 
 <div class="card">
   <div class="card-header">
-    <h2 class="card-title">Samba-Dienst (smbd)</h2>
+    <h2 class="card-title">Samba-Dienst</h2>
     <div class="btn-group">
       <form class="inline-form" method="post" action="{{ url_for('service_reload') }}"
             data-reauth data-reauth-title="Samba neu laden" data-reauth-ok="Neu laden" data-loading>
@@ -54,10 +54,8 @@
   </div>
   <div class="btn-group status-links">
     <a href="{{ url_for('config_check_page') }}" class="btn btn-ghost btn-sm">Konfiguration prüfen</a>
-    <a href="{{ url_for('audit_log_page') }}" class="btn btn-ghost btn-sm">Protokoll</a>
-    <a href="{{ url_for('backups_page') }}" class="btn btn-ghost btn-sm">Backups</a>
   </div>
-  <pre class="output">{{ status.output or 'Keine Ausgabe.' }}</pre>
+  <pre class="output" aria-label="Dienstausgabe">{{ status.output or 'Keine Ausgabe.' }}</pre>
 </div>
 
 <div class="card">

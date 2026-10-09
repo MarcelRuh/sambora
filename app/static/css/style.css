@@ -827,6 +827,24 @@ tbody tr:hover td { background: rgba(255, 255, 255, 0.04); }
 
 .form-group { margin-bottom: 1.15rem; }
 
+.password-field {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.password-field input {
+  flex: 1;
+  min-width: 0;
+}
+
+.password-toggle {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.text-error { color: #ffb199; }
+
 label {
   display: block;
   margin-bottom: 0.4rem;
@@ -851,10 +869,10 @@ select {
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 textarea { resize: vertical; min-height: 88px; }

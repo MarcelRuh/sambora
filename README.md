@@ -2,7 +2,7 @@
 
 Samba Management Suite – interne Web-Verwaltung für Samba-Freigaben auf Debian.
 
-**Aktuelle Version:** v1.28.0
+**Aktuelle Version:** v1.29.0
 
 ## Screenshots
 

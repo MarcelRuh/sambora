@@ -53,6 +53,11 @@ def create_app() -> Flask:
     def _security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        if request.endpoint != "static" and (
+            is_authenticated() or request.endpoint in ("login", "health")
+        ):
+            response.headers["Cache-Control"] = "no-store"
         ancestors = frame_ancestors()
         policy = "default-src 'self'; style-src 'self'; script-src 'self'"
         if ancestors:

@@ -27,6 +27,8 @@ def test_csp_blocks_inline_scripts(client):
     res = client.get("/login")
     csp = res.headers["Content-Security-Policy"]
     assert csp == "default-src 'self'; style-src 'self'; script-src 'self'"
+    assert res.headers.get("Cache-Control") == "no-store"
+    assert "camera=()" in res.headers.get("Permissions-Policy", "")
     assert b"<script>" not in res.data
     assert b'style="' not in res.data
 

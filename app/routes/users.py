@@ -16,6 +16,14 @@ from app.samba import (
 from app.validators import ValidationError, validate_password, validate_samba_username
 
 
+def _matched_password(form) -> str:
+    password = validate_password(form.get("password") or "")
+    confirm = form.get("confirm_password") or ""
+    if password != confirm:
+        raise ValidationError("Passwörter stimmen nicht überein.")
+    return password
+
+
 def register(app: Flask) -> None:
     @app.route("/users")
     @login_required
@@ -35,7 +43,7 @@ def register(app: Flask) -> None:
         if request.method == "POST":
             try:
                 username = validate_samba_username(request.form.get("username") or "")
-                password = validate_password(request.form.get("password") or "")
+                password = _matched_password(request.form)
                 add_samba_user(username, password)
                 audit_log("user.create", username)
                 flash(f"Samba-Benutzer „{username}“ wurde angelegt.", "success")
@@ -56,7 +64,7 @@ def register(app: Flask) -> None:
         error = None
         if request.method == "POST":
             try:
-                password = validate_password(request.form.get("password") or "")
+                password = _matched_password(request.form)
                 set_samba_password(username, password)
                 audit_log("user.password", username)
                 flash(f"Passwort für „{username}“ wurde geändert.", "success")

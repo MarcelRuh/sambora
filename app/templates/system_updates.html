@@ -150,7 +150,7 @@
   </p>
 
   <div class="update-actions">
-    <form class="inline-form update-form" method="post" action="{{ url_for('system_updates') }}" data-loading data-reauth data-reauth-title="Paketlisten aktualisieren">
+    <form class="inline-form update-form" method="post" action="{{ url_for('system_updates') }}" data-loading data-reauth data-reauth-title="Paketlisten aktualisieren" data-reauth-ok="Aktualisieren">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="update">
       <input type="hidden" name="confirm_password" value="">

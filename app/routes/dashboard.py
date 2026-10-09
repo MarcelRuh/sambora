@@ -11,14 +11,6 @@ from app.samba import SambaError, list_samba_users, read_shares, run_testparm, s
 from app.system import format_bytes, format_uptime, get_overview_safe, get_smb_status_safe
 
 
-def _share_preview(shares: list, *, limit: int = 5) -> list:
-    enabled = sorted(
-        (s for s in shares if s.enabled),
-        key=lambda item: item.name.lower(),
-    )
-    return enabled[:limit]
-
-
 def _dashboard_warnings(
     *,
     status: dict,
@@ -34,7 +26,7 @@ def _dashboard_warnings(
     if not status.get("is_running"):
         warnings.append({
             "level": "error",
-            "message": "Samba-Dienst (smbd) läuft nicht.",
+            "message": "Samba-Dienst läuft nicht.",
             "action_url": url_for("status_page"),
             "action_label": "Status öffnen",
         })
@@ -42,7 +34,7 @@ def _dashboard_warnings(
     if config_ok is False:
         warnings.append({
             "level": "error",
-            "message": "Samba-Konfiguration ist ungültig (testparm meldet Fehler).",
+            "message": "Samba-Konfiguration ist ungültig.",
             "action_url": url_for("config_check_page"),
             "action_label": "Konfiguration prüfen",
         })
@@ -142,7 +134,6 @@ def register(app: Flask) -> None:
         except SambaError:
             config_ok = False
 
-        share_preview = _share_preview(shares)
         smb_shares = sorted(
             (s for s in shares if s.enabled),
             key=lambda item: item.name.lower(),
@@ -155,7 +146,6 @@ def register(app: Flask) -> None:
             shares_count=len(shares),
             shares_active=shares_active,
             shares_disabled=shares_disabled,
-            share_preview=share_preview,
             smb_shares=smb_shares,
             users_count=users_count,
             config_ok=config_ok,

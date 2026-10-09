@@ -131,7 +131,7 @@
       { title: 'Neustart bestätigen', danger: true, okLabel: 'Neustart' }
     ).then(function (ok) {
       if (!ok) return false;
-      return ui().promptPassword({ title: 'Neustart bestätigen' }).then(function (password) {
+      return ui().promptPassword({ title: 'Neustart bestätigen', okLabel: 'Neustart' }).then(function (password) {
         if (!password) return false;
         return postDestructive(window.SAMBA_SYSTEM_REBOOT_URL, { password: password })
           .then(function (result) {
@@ -177,9 +177,13 @@
     ui().confirm(options.confirmText, {
       title: options.confirmTitle,
       danger: !!options.danger,
+      okLabel: options.okLabel || options.confirmTitle || 'Bestätigen',
     }).then(function (ok) {
       if (!ok) return;
-      return ui().promptPassword({ title: options.confirmTitle }).then(function (password) {
+      return ui().promptPassword({
+        title: options.confirmTitle,
+        okLabel: options.okLabel || 'Bestätigen',
+      }).then(function (password) {
         if (!password) return;
 
         showProgressCard(options.prefix);
@@ -231,6 +235,7 @@
       buttonIdleText: 'Updates installieren',
       confirmTitle: 'Updates installieren',
       confirmText: 'Es werden apt update, apt upgrade -y und apt autoremove ausgeführt. Bei erforderlichem Neustart wirst du zur Bestätigung aufgefordert.',
+      okLabel: 'Updates installieren',
       danger: true,
       onSuccess: function (data) {
         if (data.reboot_pending) {
@@ -267,6 +272,7 @@
           buttonIdleText: appUpdateLabel,
           confirmTitle: 'App von GitHub aktualisieren',
           confirmText: 'Sambora von GitHub aktualisieren? Die Web-UI startet kurz neu.',
+          okLabel: 'Aktualisieren',
           danger: false,
           onSuccess: function (data) {
             var msg = 'App-Update abgeschlossen.';

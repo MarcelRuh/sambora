@@ -67,6 +67,7 @@ def test_user_create_and_delete(client, monkeypatch):
             "csrf_token": _token(client),
             "username": "alice",
             "password": "secretpass",
+            "confirm_password": "secretpass",
         },
         follow_redirects=False,
     )
@@ -163,6 +164,44 @@ def test_files_upload_commits(client, monkeypatch, tmp_path):
 def test_share_create_requires_login(client):
     res = client.post("/shares/new", data={"name": "x"})
     assert res.status_code in (302, 403)
+
+
+def test_user_create_rejects_password_mismatch(client, monkeypatch):
+    created: dict = {}
+    monkeypatch.setattr(
+        "app.routes.users.add_samba_user",
+        lambda username, password: created.update(user=username),
+    )
+    _login_post(client)
+    client.get("/users/new")
+    res = client.post(
+        "/users/new",
+        data={
+            "csrf_token": _token(client),
+            "username": "alice",
+            "password": "secretpass",
+            "confirm_password": "otherpass1",
+        },
+        follow_redirects=False,
+    )
+    assert res.status_code == 200
+    assert created == {}
+    assert "stimmen nicht".encode("utf-8") in res.data
+
+
+def test_destructive_actions_reject_wrong_password(client, monkeypatch):
+    deleted: list[str] = []
+    monkeypatch.setattr("app.routes.users.delete_samba_user", lambda username: deleted.append(username))
+    monkeypatch.setattr("app.routes.users.list_samba_users", lambda: ["alice"])
+    _login_post(client)
+    client.get("/users")
+    res = client.post(
+        "/users/alice/delete",
+        data={"csrf_token": _token(client), "confirm_password": "wrong-password"},
+        follow_redirects=False,
+    )
+    assert res.status_code == 302
+    assert deleted == []
 
 
 def test_share_delete_files_requires_admin_password(client, monkeypatch):

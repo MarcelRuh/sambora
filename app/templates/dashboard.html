@@ -24,7 +24,7 @@
 {% endif %}
 
 <div class="stats-grid">
-  <div class="stat-card {% if status.is_running %}tone-ok{% else %}tone-bad{% endif %}">
+  <a href="{{ url_for('status_page') }}" class="stat-card stat-card-link {% if status.is_running %}tone-ok{% else %}tone-bad{% endif %}" title="Dienststatus">
     <span class="stat-label">Samba-Dienst</span>
     <span class="stat-value">
       {% if status.is_running %}
@@ -33,8 +33,8 @@
         <span class="badge off">{{ status.active }}</span>
       {% endif %}
     </span>
-    <span class="stat-hint">Dienststatus</span>
-  </div>
+    <span class="stat-hint">Klicken für Details</span>
+  </a>
   <a href="{{ url_for('status_page') }}" class="stat-card stat-card-link {% if config_ok %}tone-ok{% elif config_ok is sameas false %}tone-bad{% endif %}" title="Konfiguration &amp; Dienst">
     <span class="stat-label">Konfiguration</span>
     <span class="stat-value">
@@ -139,23 +139,21 @@
     <span class="stat-hint">aktualisierbare Pakete</span>
   </div>
   {% endif %}
-  <div class="stat-card {% if overview.reboot_required %}tone-warn{% endif %}">
+  {% if overview.reboot_required %}
+  <a href="{{ url_for('system_updates') }}" class="stat-card stat-card-link tone-warn" title="Zum Neustart">
     <span class="stat-label">Neustart</span>
-    <span class="stat-value">
-      {% if overview.reboot_required %}
-        <span class="badge warn">Erforderlich</span>
-      {% else %}
-        <span class="badge ok">Nein</span>
-      {% endif %}
-    </span>
+    <span class="stat-value"><span class="badge warn">Erforderlich</span></span>
     <span class="stat-hint">
-      {% if overview.reboot_required and overview.reboot_reason %}
-        {{ overview.reboot_reason }}
-      {% else %}
-        Laufzeit: {{ format_uptime(overview.uptime_seconds) }}
-      {% endif %}
+      {% if overview.reboot_reason %}{{ overview.reboot_reason }}{% else %}Klicken zum Neustarten{% endif %}
     </span>
+  </a>
+  {% else %}
+  <div class="stat-card">
+    <span class="stat-label">Neustart</span>
+    <span class="stat-value"><span class="badge ok">Nein</span></span>
+    <span class="stat-hint">Laufzeit: {{ format_uptime(overview.uptime_seconds) }}</span>
   </div>
+  {% endif %}
   {% elif overview_error %}
   <div class="stat-card">
     <span class="stat-label">System</span>
@@ -240,40 +238,7 @@
 </div>
 {% endif %}
 
-{% if share_preview %}
-<div class="card">
-  <div class="card-header">
-    <h2 class="card-title">Freigaben (Auszug)</h2>
-    <a href="{{ url_for('shares_list') }}" class="btn btn-secondary btn-sm">Alle anzeigen</a>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Pfad</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for share in share_preview %}
-        <tr>
-          <td><span class="share-name">{{ share.name }}</span></td>
-          <td><code>{{ share.path }}</code></td>
-          <td><span class="badge ok">Aktiv</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% if shares_count > share_preview|length %}
-  <p class="hint u-inset-hint">
-    {{ shares_count - share_preview|length }} weitere Freigabe(n) in der
-    <a href="{{ url_for('shares_list') }}">vollständigen Liste</a>.
-  </p>
-  {% endif %}
-</div>
-{% elif not shares_count %}
+{% if not shares_count %}
 <div class="card">
   <div class="empty-state">
     <p>Noch keine Freigaben angelegt.</p>
